@@ -1,5 +1,6 @@
 import React from 'react';
-import { useSpring, animated } from '@react-spring/web'
+import { useSpring, animated } from '@react-spring/web';
+import { Box } from '@material-ui/core';
 import SvgIcon from '@material-ui/core/SvgIcon';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
