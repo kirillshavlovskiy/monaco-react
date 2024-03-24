@@ -1,7 +1,7 @@
 import { makeStyles } from '@material-ui/core/styles';
 
-const useStyles = makeStyles(theme => ({
-  root: {
+  const useStyles = makeStyles((theme) => ({
+    root: {
     width: '100%',
     height: '100%',
     display: 'flex',
@@ -10,6 +10,10 @@ const useStyles = makeStyles(theme => ({
     'padding-top': 15,
     'margin-bottom': 15,
   },
-}));
+
+    footer: {
+      height: '100px',
+    },
+  }));
 
 export default useStyles;

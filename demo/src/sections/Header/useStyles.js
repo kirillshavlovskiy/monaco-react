@@ -6,10 +6,10 @@ const useStyles = makeStyles(theme => ({
   },
   logo: {
     marginRight: theme.spacing(1),
-    fontWeight: 200,
-    border: '1px solid',
+    fontWeight: 500,
+    fontSize: 24,
     padding: 2,
-    borderColor: theme.palette.secondary.light,
+
   },
   themeSwitcher: {
     transition: '0.8s ease',
@@ -50,9 +50,18 @@ const useStyles = makeStyles(theme => ({
       display: 'none',
     },
   },
-  rotate: {
-    transform: 'rotate(0)',
+  //...
+
+rotate: {
+    transition: '0.8s ease',
+    transform: 'rotate(180deg)',
   },
+  settings: {
+    position: "relative",
+    top: 10,
+    right: 10,
+    zIndex: 1
+  }
 }));
 
 export default useStyles;

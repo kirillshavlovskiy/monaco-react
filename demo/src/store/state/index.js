@@ -1,10 +1,10 @@
 import config from 'config';
 
-const initalTheme = localStorage.getItem('themeMode') || 'dark';
+const initalTheme = 'dark';
 
 const initialState = {
   themeMode: initalTheme,
-
+  isSettingsVisible: true,
   isEditorReady: false,
 
   notifications: config.notifications.defaultState,
@@ -12,6 +12,7 @@ const initialState = {
   editor: {
     selectedLanguageId: 19, // 19 is the id of javasctipt
     options: {
+
       acceptSuggestionOnCommitCharacter: true,
       acceptSuggestionOnEnter: 'on',
       accessibilitySupport: 'auto',
@@ -29,13 +30,23 @@ const initialState = {
       fixedOverflowWidgets: false,
       folding: true,
       foldingStrategy: 'auto',
+      fontSize: 16,
+      fontFamily: 'monospace',
       fontLigatures: false,
       formatOnPaste: false,
       formatOnType: false,
       hideCursorInOverviewRuler: false,
       highlightActiveIndentGuide: true,
+      lineHeight: 24,
       links: true,
-      mouseWheelZoom: false,
+      minimap: {
+        enabled: true,
+      },
+      scrollbar: {
+        horizontalSliderSize: 4,
+        verticalSliderSize: 18,
+      },
+      mouseWheelZoom: true,
       multiCursorMergeOverlapping: true,
       multiCursorModifier: 'alt',
       overviewRulerBorder: true,

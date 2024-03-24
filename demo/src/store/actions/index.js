@@ -2,6 +2,11 @@ const setIsEditorReady = ({ state }, isReady) => {
   state.isEditorReady = isReady;
 };
 
+const setIsSettingsVisible = ({ state }, value) => {
+      state.isSettingsVisible = value;
+};
+
+
 const setThemeMode = ({ state }, themeMode) => {
   state.themeMode = themeMode;
   localStorage.setItem('themeMode', themeMode); // Current solution is temporary
@@ -50,5 +55,7 @@ export {
   setEditorMode,
   setIsEditorReady,
   showNotification,
-  editor, diffEditor,
+  setIsSettingsVisible,
+  editor,
+  diffEditor,
 };
