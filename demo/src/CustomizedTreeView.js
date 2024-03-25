@@ -42,26 +42,26 @@ export default function CustomizedTreeView() {
 
     return (
         <ThemeProvider>
-            <Box sx={{ minHeight: 270, flexGrow: 1, maxWidth: 300 }}>
-                <IconButton edge="start" color="inherit" onClick={handleDrawerOpen}>
-                    <MenuIcon />
-                </IconButton>
+        <Box sx={{ minHeight: 270, flexGrow: 1, maxWidth: 300 }}>
+            <IconButton edge="start" color="inherit" onClick={handleDrawerOpen}>
+                <MenuIcon />
+            </IconButton>
 
-                <Drawer anchor="left" open={isOpen} onClose={handleDrawerClose}>
-                    <TreeView
-                        aria-label="customized"
-                        defaultExpanded={['1']}
-                        defaultCollapseIcon={<ExpandMoreIcon />}
-                        defaultExpandIcon={<ChevronRightIcon />}
-                        defaultEndIcon={<RemoveIcon />}
-                        style={{ overflowX: 'hidden', minHeight: 270, flexGrow: 1, maxWidth: 300 }}
-                    >
-                        <StyledTreeItem nodeId="1" label="Main">
-                            {/* Other Tree Items */}
-                        </StyledTreeItem>
-                    </TreeView>
-                </Drawer>
-            </Box>
+            <Drawer anchor="left" open={isOpen} onClose={handleDrawerClose}>
+                <TreeView
+                    aria-label="customized"
+                    defaultExpanded={['1']}
+                    defaultCollapseIcon={<ExpandMoreIcon />}
+                    defaultExpandIcon={<ChevronRightIcon />}
+                    defaultEndIcon={<RemoveIcon />}
+                    style={{ overflowX: 'hidden', minHeight: 270, flexGrow: 1, maxWidth: 300 }}
+                >
+                    <StyledTreeItem nodeId="1" label="Main">
+                        {/* Other Tree Items */}
+                    </StyledTreeItem>
+                </TreeView>
+            </Drawer>
+        </Box>
         </ThemeProvider>
     );
 }

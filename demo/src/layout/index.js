@@ -11,6 +11,6 @@ const Layout = _ => <ThemeProvider>
     <Content />
     <Structure />
   </section>
-</ThemeProvider>;
+    </ThemeProvider>;
 
 export default Layout;
