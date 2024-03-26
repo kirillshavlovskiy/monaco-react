@@ -9,62 +9,54 @@ import { useStore } from 'store';
 import { isMobile } from 'utils';
 import config from 'config';
 import useStyles from './useStyles';
-
+import SettingsIcon from '@material-ui/icons/Settings';
 
 const Header = _ => {
-  const {
-    state: { themeMode, editorMode, isSettingsVisible },
-    actions: { setThemeMode, setEditorMode, setIsSettingsVisible },
-  } = useStore();
-  const [rotate, setRotate] = useState(false);
-  const classes = useStyles();
+    const {
+        state: { themeMode, editorMode, isSettingsVisible },
+        actions: { setThemeMode, setEditorMode, setIsSettingsVisible },
+    } = useStore();
 
-  const handleThemeSwitch = (ev) => {
-    setThemeMode(themeMode === 'light' ? 'dark' : 'light');
-  };
+    const [settingsRotate, setSettingsRotate] = useState(false);
+    const classes = useStyles();
 
-  const toggleSettings = (ev) => {
-    console.log("Toggle settings clicked:");
-    setIsSettingsVisible(!isSettingsVisible);
-    console.log(isSettingsVisible);
-    setRotate(!rotate); // toggle rotation state
-  };
+    function handleThemeSwitch(ev) {
+        setThemeMode(themeMode === 'light' ? 'dark' : 'light');
+    }
 
-  return (
-    <>
-      <AppBar color="default">
-        <Toolbar>
-          <Typography className={classes.logo}>
-            {"<BP />"}
-          </Typography>
-          {!isMobile && (
-            <Typography variant="h6" className={classes.title}>
-              BrainPower.AI
-            </Typography>
-          )}
-          <Button onClick={handleThemeSwitch}>
-            <span className={classNames(classes.stars, { [classes.activate]: themeMode === 'dark' })} />
-            <span className={classNames(classes.stars, { [classes.activate]: themeMode === 'dark' })} />
-            <img
-              className={classNames(
-                  classes.themeSwitcher,
-                  {[classes.rotate]: themeMode === 'dark'}
-                )}
-              width="40"
-              src={config.urls.themeModeIcon}
-              alt="Theme mode icon"
-            />
-            </Button>
-            <Button onClick={toggleSettings}>
+    const handleSettingsClick = () => {
+        setSettingsRotate(!settingsRotate);
+        setIsSettingsVisible(!isSettingsVisible);
+    };
 
-                Settings
+    return (
+        <>
+            <AppBar color="default">
+                <Toolbar>
 
-          </Button>
-        </Toolbar>
-      </AppBar>
-      <Notifications />
-    </>
-  );
+                    {!isMobile && (
+                        <Typography variant="h4" className={classes.title}>
+                            BrainPower>AI
+                        </Typography>
+                    )}
+                    <Button onClick={handleThemeSwitch}>
+
+                        <img
+                            className={classNames(classes.themeSwitcher, { [classes.rotate]: themeMode === 'dark' })}
+                            style={{ filter: settingsRotate ? 'brightness(0.5)' : 'none' }}
+                            width="25"
+                            src={config.urls.themeModeIcon}
+                            alt="theme mode icon"
+                        />
+                    </Button>
+                    <Button onClick={handleSettingsClick}>
+                        <SettingsIcon className={classNames(classes.settingsSwitcher, {[classes.rotate]: settingsRotate})} style={{ filter: settingsRotate ? 'brightness(0.5)' : 'none' }} />
+                    </Button>
+                </Toolbar>
+            </AppBar>
+            <Notifications />
+        </>
+    );
 };
 
 export default Header;

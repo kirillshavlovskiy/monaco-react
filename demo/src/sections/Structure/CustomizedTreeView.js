@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Drawer, IconButton} from '@mui/material';
-import { withStyles } from '@mui/styles';
+import { Box, Drawer, IconButton } from '@mui/material';
+import { withStyles } from '@material-ui/core/styles';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import RemoveIcon from '@mui/icons-material/Remove';
@@ -8,7 +8,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import TreeView from '@material-ui/lab/TreeView';
 import TreeItem from '@material-ui/lab/TreeItem';
 import { alpha } from '@mui/system';
-import { ThemeProvider } from 'theme';
+
 
 
 
@@ -41,7 +41,7 @@ export default function CustomizedTreeView() {
     };
 
     return (
-        <ThemeProvider>
+
             <Box sx={{ minHeight: 270, flexGrow: 1, maxWidth: 300 }}>
                 <IconButton edge="start" color="inherit" onClick={handleDrawerOpen}>
                     <MenuIcon />
@@ -57,11 +57,15 @@ export default function CustomizedTreeView() {
                         style={{ overflowX: 'hidden', minHeight: 270, flexGrow: 1, maxWidth: 300 }}
                     >
                         <StyledTreeItem nodeId="1" label="Main">
-                            {/* Other Tree Items */}
+                            <StyledTreeItem nodeId="2" label="Child of Main">
+                                <StyledTreeItem nodeId="3" label="Grandchild of Main">
+                                    <StyledTreeItem nodeId="4" label="Great Grandchild of Main" />
+                                </StyledTreeItem>
+                            </StyledTreeItem>
                         </StyledTreeItem>
                     </TreeView>
                 </Drawer>
             </Box>
-        </ThemeProvider>
+
     );
 }

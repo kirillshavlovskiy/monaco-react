@@ -1,18 +1,20 @@
 import React from 'react';
-import { getTheme, ThemeProvider }  from 'theme';
+import { getTheme, CustomThemeProvider }  from 'theme';
 import ErrorBoundary from 'react-error-boundary';
 import ErrorBoundaryFallback from 'components/ErrorBoundaryFallback';
-import CustomizedView from 'layout';
+import Layout from 'layout';
 
 
 
 export const App = () => (
-    <ErrorBoundary FallbackComponent={ErrorBoundaryFallback}>
-    <ThemeProvider theme={getTheme}>
+    <CustomThemeProvider>
+        <ErrorBoundary FallbackComponent={ErrorBoundaryFallback}>
 
-      <CustomizedView />
-    </ThemeProvider>
+
+      <Layout />
+
         </ErrorBoundary>
+    </CustomThemeProvider>
 
 );
 

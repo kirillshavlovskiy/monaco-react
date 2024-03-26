@@ -9,9 +9,12 @@ const useStyles = makeStyles(theme => ({
     fontWeight: 500,
     fontSize: 24,
     padding: 2,
-
   },
   themeSwitcher: {
+    transition: '0.8s ease',
+    transform: 'rotate(180deg)',
+  },
+  settingsSwitcher: {
     transition: '0.8s ease',
     transform: 'rotate(180deg)',
   },
@@ -20,7 +23,7 @@ const useStyles = makeStyles(theme => ({
     '&:after, &:before': {
       color: 'white',
       content: '"*"',
-      fontSize: 7,
+      fontSize: 1,
       fontWeight: 900,
       position: 'absolute',
       zIndex: 1,
@@ -50,18 +53,9 @@ const useStyles = makeStyles(theme => ({
       display: 'none',
     },
   },
-  //...
-
-rotate: {
-    transition: '0.8s ease',
-    transform: 'rotate(180deg)',
+  rotate: {
+    transform: 'rotate(0)',
   },
-  settings: {
-    position: "relative",
-    top: 10,
-    right: 10,
-    zIndex: 1
-  }
 }));
 
 export default useStyles;

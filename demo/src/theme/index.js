@@ -1,4 +1,4 @@
 import getTheme from './getTheme';
-import ThemeProvider from './ThemeProvider';
+import CustomThemeProvider from './ThemeProvider';
 
-export { getTheme, ThemeProvider };
+export { getTheme, CustomThemeProvider };
