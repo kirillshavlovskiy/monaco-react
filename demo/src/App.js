@@ -1,5 +1,5 @@
 import React from 'react';
-import { getTheme, CustomThemeProvider }  from 'theme';
+import { MuiThemeProvider }  from 'theme';
 import ErrorBoundary from 'react-error-boundary';
 import ErrorBoundaryFallback from 'components/ErrorBoundaryFallback';
 import Layout from 'layout';
@@ -7,14 +7,14 @@ import Layout from 'layout';
 
 
 export const App = () => (
-    <CustomThemeProvider>
+    <MuiThemeProvider>
         <ErrorBoundary FallbackComponent={ErrorBoundaryFallback}>
 
 
       <Layout />
 
         </ErrorBoundary>
-    </CustomThemeProvider>
+    </MuiThemeProvider>
 
 );
 

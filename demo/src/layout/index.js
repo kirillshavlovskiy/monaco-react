@@ -4,14 +4,14 @@ import Header from './Header';
 import Content from './Content';
 
 //import Structure from './Structure';
-import { CustomThemeProvider } from 'theme';
+import { MuiThemeProvider } from 'theme';
 
-const Layout = _ => <CustomThemeProvider>
-  <section className="full-size">
+const Layout = _ => <MuiThemeProvider>
+  <section
+      className="full-size"
+  >
     <Header />
-    <Content />
-
   </section>
-</CustomThemeProvider>;
+</MuiThemeProvider>;
 
 export default Layout;

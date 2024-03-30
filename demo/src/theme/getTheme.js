@@ -11,6 +11,9 @@ const getTheme = themeMode => {
     palette.background = {
       paper: '#202124',
     };
+    palette.background = {
+      paper: '#1E1E23',
+    }
   }
 
   return createMuiTheme({ palette });

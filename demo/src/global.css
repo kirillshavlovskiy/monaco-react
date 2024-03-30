@@ -11,3 +11,15 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+.tool_bar {
+  width: 80px;
+
+  border: 2px solid white;
+}
+.chatbox {
+  flex: 1;
+  border: 2px solid white
+
+}
+

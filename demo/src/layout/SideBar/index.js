@@ -1,12 +1,12 @@
 import React from 'react';
 
-import ContentLoader from 'sections/Structure';
+import ContentLoader from 'sections/SideBar';
 import { asyncComponentLoader } from 'utils';
 
 const ContentSection = asyncComponentLoader(ContentLoader);
 
-const Structure = _ => <div>
+const Console = _ => <div>
   <ContentSection />
 </div>;
 
-export default Structure;
+export default Console;

@@ -1,4 +1,6 @@
 import getTheme from './getTheme';
-import CustomThemeProvider from './ThemeProvider';
+import MuiThemeProvider from './ThemeProvider';
 
-export { getTheme, CustomThemeProvider };
+
+
+export { getTheme, MuiThemeProvider };

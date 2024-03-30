@@ -1,6 +1,7 @@
 import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles(theme => ({
+
   title: {
     flexGrow: 1,
   },
@@ -17,19 +18,6 @@ const useStyles = makeStyles(theme => ({
   settingsSwitcher: {
     transition: '0.8s ease',
     transform: 'rotate(180deg)',
-  },
-  stars: {
-    position: 'relative',
-    '&:after, &:before': {
-      color: 'white',
-      content: '"*"',
-      fontSize: 1,
-      fontWeight: 900,
-      position: 'absolute',
-      zIndex: 1,
-      transition:'0.8s ease',
-      opacity: 0,
-    },
   },
   activate: {
     '&:nth-child(1):after': {

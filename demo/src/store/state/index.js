@@ -4,7 +4,8 @@ const initalTheme = 'dark';
 
 const initialState = {
   themeMode: initalTheme,
-  isSettingsVisible: true,
+  isSettingsVisible: false,
+  isSideBarVisible: true,
   isEditorReady: false,
 
   notifications: config.notifications.defaultState,
@@ -30,7 +31,7 @@ const initialState = {
       fixedOverflowWidgets: false,
       folding: true,
       foldingStrategy: 'auto',
-      fontSize: 16,
+      fontSize: 14,
       fontFamily: 'monospace',
       fontLigatures: false,
       formatOnPaste: false,
@@ -43,7 +44,7 @@ const initialState = {
         enabled: true,
       },
       scrollbar: {
-        horizontalSliderSize: 4,
+        horizontalSliderSize: 18,
         verticalSliderSize: 18,
       },
       mouseWheelZoom: true,
@@ -57,7 +58,7 @@ const initialState = {
       renderControlCharacters: false,
       renderFinalNewline: true,
       renderIndentGuides: true,
-      renderLineHighlight: 'all',
+      renderLineHighlight: 'none',
       renderWhitespace: 'none',
       revealHorizontalRightPadding: 30,
       roundedSelection: true,
@@ -68,7 +69,7 @@ const initialState = {
       selectionClipboard: true,
       selectionHighlight: true,
       showFoldingControls: 'mouseover',
-      smoothScrolling: false,
+      smoothScrolling: true,
       suggestOnTriggerCharacters: true,
       wordBasedSuggestions: true,
       // eslint-disable-next-line

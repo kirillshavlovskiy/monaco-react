@@ -1,20 +1,35 @@
 import React, { useState, useRef } from 'react';
-
 import TextField from '@material-ui/core/TextField';
 import MenuItem from '@material-ui/core/MenuItem';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
-import Link from '@material-ui/core/Link';
 import Button from '@material-ui/core/Button';
-
 import Editor from '@monaco-editor/react';
-
-
 import { useStore } from 'store';
 import config from 'config';
 import { isMobile } from 'utils';
-
 import useStyles from './useStyles';
+import {withStyles} from "@material-ui/core/styles";
+import { useTheme } from '@mui/material';
+
+
+const CustomTextField = withStyles((theme) => ({
+  root: {
+    '& .MuiFilledInput-input': {
+      backgroundColor: theme.palette.background.paper
+    },
+    '& .MuiFilledInput-underline:before': {
+      borderBottomColor: theme.palette.background.paper
+    },
+    '& .MuiFilledInput-underline:after': {
+      borderBottomColor: theme.palette.text.primary
+    }
+  }
+}))(TextField);
+
+
+
+
 
 const Settings = _ => {
   const classes = useStyles({ isMobile });
@@ -24,7 +39,7 @@ const Settings = _ => {
     actions: { editor: { setSelectedLanguageId, setOptions, setMonacoTheme }, showNotification },
     effects: { defineTheme, monacoThemes },
   } = useStore();
-
+  const theme = useTheme();
   const editorRef = useRef();
 
   function handleLanguageChange(ev) {
@@ -68,27 +83,28 @@ const Settings = _ => {
     <div className={classes.root}>
       <Typography variant="h5">Settings</Typography>
       <Divider />
-      <div className={classes.languages}>
+      <div className={classes.languages}
+           style={{ color: theme.palette.text.primary }}>
         <Typography className={classes.title} variant="h6">Languages</Typography>
-        <TextField
-          select
-          variant="filled"
-          value={selectedLanguageId}
-          onChange={handleLanguageChange}
-          className="full-width"
-          label="Language"
+        <CustomTextField
+            select
+            variant="filled"
+            value={selectedLanguageId}
+            onChange={handleLanguageChange}
+            className="full-width"
+            label="Language"
         >
           {config.supportedLanguages.map(language => (
             <MenuItem key={language.id} value={language.id}>
               {language.name}
             </MenuItem>
           ))}
-        </TextField>
+        </CustomTextField>
       </div>
 
       <div>
         <Typography className={classes.title} variant="h6">Themes</Typography>
-        <TextField
+        <CustomTextField
           select
           variant="filled"
           value={monacoTheme}
@@ -107,23 +123,13 @@ const Settings = _ => {
               {themeName}
             </MenuItem>
           ))}
-        </TextField>
+        </CustomTextField>
       </div>
 
       <div>
-        <Typography className={classes.title} variant="h6">Options</Typography>
-        <Typography variant="subtitle2" gutterBottom>
-          For full list of options with descriptions visit <Link
-            href={config.urls.IEditorOptions}
-            rel="noreferrer"
-            target="_blank"
-          >
-            here
-          </Link>
-        </Typography>
-        <Typography variant="subtitle2" gutterBottom>
-          Now you can change options below, press apply and see result in the left side editor
-        </Typography>
+        <Typography className={classes.title} variant="h5">Options</Typography>
+
+
         <div className={classes.editor}>
           <Editor
             theme={monacoTheme}
@@ -133,7 +139,7 @@ const Settings = _ => {
             onMount={handleEditorDidMount}
           />
         </div>
-        <Button variant="outlined" disabled={!isEditorReady} onClick={handleApply}>Apply</Button>
+        <Button variant="outlined" disabled={!isEditorReady} onClick={handleApply}>>Apply</Button>
       </div>
     </div>
   );
