@@ -7,10 +7,9 @@ import Content from './Content';
 import { MuiThemeProvider } from 'theme';
 
 const Layout = _ => <MuiThemeProvider>
-  <section
-      className="full-size"
-  >
+  <section className="full-size">
     <Header />
+
   </section>
 </MuiThemeProvider>;
 

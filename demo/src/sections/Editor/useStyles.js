@@ -6,26 +6,45 @@ import { makeStyles } from '@material-ui/core/styles';
       height: '100%',
       display: 'flex',
       justifyContent: 'space-between',
-      padding: 15,
+
+
     },
 
     terminal: {
       flexGrow: 1,
         paddingLeft: ({isMobile}) => isMobile ? 0 : 0,
       '& button': {
-        marginRight: 10,
+        marginRight: 35,
+
 
       },
     },
     editor: {
       marginBottom: 12,
       marginTop: 12,
-      border: `1px solid #E6E6E6`,
+      marginRight: 12,
       padding: 10,
-      backgroundColor: theme.palette.background.paper,
+    },
+    editorWrapper: {
+      backgroundColor: '#1D1D1D',
+      border: '1px solid #1D1D1D',
+      borderRadius: '5px',
+      '& .MonacoEditor': { // If MonacoEditor renders a div with a class, it will apply these styles.
+        borderRadius: '5px',
+      },
+      padding: 2,
+      marginTop: 10,
+    },
+    buttonContainer: {
+      display: 'flex',
+      justifyContent: 'space-between',
+    },
+    spacer: {
+      flex: 1,
     },
     execute_button: {
       marginTop: 15,
+      marginButtom: 0,
     }
   }));
 

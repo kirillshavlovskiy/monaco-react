@@ -5,8 +5,8 @@ const useStyles = makeStyles(theme => ({
     flexGrow: 1,
     paddingLeft: ({ isMobile }) => isMobile ? 0 : 5,
     '& button': {
-      marginRight: 5,
     },
+    marginRight: 10,
   },
   languages: {
     width: '100%',
@@ -20,12 +20,47 @@ const useStyles = makeStyles(theme => ({
   editor: {
     marginBottom: 12,
     marginTop: 12,
-    border: `1px solid #E6E6E6`,
+    border: `2px solid #686868`,
     padding: 10,
     backgroundColor: theme.palette.background.paper,
   },
+  messenger: {
+    marginBottom: 12,
+    marginTop: 17,
+    border: `2px solid #686868`,
+    padding: 10,
+    backgroundColor: theme.palette.background.paper,
+  },
+  editorWrapper: {
+    backgroundColor: '#1D1D1D',
+    border: '1px solid #1D1D1D',
+    borderRadius: '5px',
+    '& .MonacoEditor': { // If MonacoEditor renders a div with a class, it will apply these styles.
+      borderRadius: '5px',
+    },
+    padding: 2,
+    marginTop: 10,
+  },
+  messangerWrapper: {
+    backgroundColor: '#1D1D1D',
+    border: '1px solid #1D1D1D',
+    borderRadius: '5px',
+    '& .MonacoEditor': { // If MonacoEditor renders a div with a class, it will apply these styles.
+      borderRadius: '5px',
+    },
+    padding: 2,
+    marginTop: 10,
+  },
+  buttonContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+  },
+  spacer: {
+    flex: 1,
+  },
   execute_button: {
     marginTop: 15,
+    marginButtom: 0,
   }
 }));
 

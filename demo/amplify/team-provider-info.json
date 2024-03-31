@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-brainpowerai-dev-134055-authRole",
+      "UnauthRoleArn": "arn:aws:iam::891377302573:role/amplify-brainpowerai-dev-134055-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::891377302573:role/amplify-brainpowerai-dev-134055-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-brainpowerai-dev-134055-deployment",
+      "UnauthRoleName": "amplify-brainpowerai-dev-134055-unauthRole",
+      "StackName": "amplify-brainpowerai-dev-134055",
+      "StackId": "arn:aws:cloudformation:us-east-1:891377302573:stack/amplify-brainpowerai-dev-134055/feb28bd0-ee81-11ee-aada-12664190c781",
+      "AmplifyAppId": "dhq1eab7946x5"
+    },
+    "categories": {
+      "hosting": {
+        "S3AndCloudFront": {}
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import MonacoEditor from '@monaco-editor/react';
 import Settings from 'sections/Settings';
 import Console from 'sections/Console';
@@ -9,18 +9,13 @@ import config from 'config';
 import useStyles from './useStyles';
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import Divider from "@material-ui/core/Divider";
-import Paper from '@material-ui/core/Paper';
+import {MyPaper} from 'theme';
 import {styled, useTheme} from "@mui/material/styles";
+import Drawer from "@mui/material/Drawer";
+import ReplyIcon from "@mui/icons-material/Reply";
 
-const MyPaper = styled(Paper)(({ theme }) => ({
-    backgroundColor: theme.palette.background.paper,
-    color: theme.palette.text.primary,
-    button: {
-        color: theme.palette.text.primary,
-        border: `1px solid ${theme.palette.text.primary}`,
-    },
-}));
 const Editor = () => {
 
     const classes = useStyles();
@@ -45,15 +40,6 @@ const Editor = () => {
         setIsEditorReady(true);
     }
 
-    useEffect(() => {
-        if (isSettingsVisible) {
-            setEditorWidth('66%');
-        } else {
-            setEditorWidth('50%');
-        }
-    }, [isSettingsVisible]);
-
-
     function getEditorValue() {
         return editorRef.current?.getValue();
     }
@@ -67,15 +53,21 @@ const Editor = () => {
         <div className={classes.root} >
 
             <div className={classes.terminal}
-                 style={{width: editorWidth}}
+
             > {/* Added a wrapper with controlled width */}
-                <Typography variant="h5">Terminal</Typography>
-                <Divider />
+
                 <MyPaper className={classes.editor}>
+                    <Typography variant="h5"
+                                sx={{ marginLeft: '20px' }}
+                    >
+                        Terminal
+                    </Typography>
+                    <div className={classes.editorWrapper}>
                         <MonacoEditor
-                            key={editorWidth}
+                            key="monaco_editor"
                             theme={monacoTheme}
                             height="70vh"
+                            width="90vh"
                             path={language}
                             defaultValue={examples[selectedLanguageId] || ''}
                             defaultLanguage={language}
@@ -83,12 +75,33 @@ const Editor = () => {
                             beforeMount={handleEditorWillMount}
                             onMount={handleEditorDidMount}
                         />
-                    <Button className={classes.execute_button} variant="outlined" disabled={!isEditorReady} onClick={handleApply} >Execute</Button>
+                    </div>
+                    <div className={classes.buttonContainer}>
 
+                    <div className={classes.spacer}/>
+
+                    <Button className={classes.execute_button}
+                            variant="contained"
+                            disabled={!isEditorReady}
+                            endIcon={<PlayArrowIcon/>}
+                            onClick={handleApply}
+
+                    >
+                        Run
+                    </Button>
+                    </div>
                 </MyPaper>
             </div>
-            {isSettingsVisible && <Settings />}
-            {!isSettingsVisible && <Console />}
+            <Console/>
+            {isSettingsVisible &&
+                <Drawer
+                    variant="permanent"
+
+                >
+                    <Settings/>
+                </Drawer>
+            }
+
     </div>
     );
 }

@@ -10,23 +10,27 @@ import {styled, useTheme} from "@mui/material/styles";
 const Content = _ => {
 const classes = useStyles();
 const theme = useTheme();
-const MyPaper = styled(Paper)(({ theme }) => ({
+const MainPaper = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.background.paper,
     color: theme.palette.text.primary,
     button: {
         color: theme.palette.text.primary,
         border: `2px solid ${theme.palette.text.primary}`,
     },
+    fields: {
+        color: theme.palette.text.primary,
+        border: `2px solid ${theme.palette.text.primary}`,
+    },
 }));
 
   return (
-    <MyPaper
+    <MainPaper
         elevation={0}
         square={true}
         className={classNames('full-size', classes.root)}
     >
       <Editor />
-    </MyPaper>
+    </MainPaper>
   );
 }
 

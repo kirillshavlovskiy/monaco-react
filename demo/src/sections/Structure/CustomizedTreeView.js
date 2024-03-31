@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Box, Drawer, IconButton } from '@mui/material';
+import { Box } from '@mui/material';
 import { withStyles } from '@material-ui/core/styles';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import RemoveIcon from '@mui/icons-material/Remove';
-import MenuIcon from '@mui/icons-material/Menu';
+
 import TreeView from '@material-ui/lab/TreeView';
 import TreeItem from '@material-ui/lab/TreeItem';
 import { alpha } from '@mui/system';
@@ -29,25 +29,12 @@ const StyledTreeItem = withStyles(styles)(({ classes, ...others }) => (
     <TreeItem {...others} className={classes.root} />
 ));
 
-export default function CustomizedTreeView() {
-    const [isOpen, setIsOpen] = useState(true);
 
-    const handleDrawerOpen = () => {
-        setIsOpen(true);
-    };
 
-    const handleDrawerClose = () => {
-        setIsOpen(false);
-    };
 
     return (
 
             <Box sx={{ minHeight: 270, flexGrow: 1, maxWidth: 300 }}>
-                <IconButton edge="start" color="inherit" onClick={handleDrawerOpen}>
-                    <MenuIcon />
-                </IconButton>
-
-                <Drawer anchor="left" open={isOpen} onClose={handleDrawerClose}>
                     <TreeView
                         aria-label="customized"
                         defaultExpanded={['1']}
@@ -64,7 +51,7 @@ export default function CustomizedTreeView() {
                             </StyledTreeItem>
                         </StyledTreeItem>
                     </TreeView>
-                </Drawer>
+
             </Box>
 
     );

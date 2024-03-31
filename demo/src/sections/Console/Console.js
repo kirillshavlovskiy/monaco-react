@@ -7,18 +7,11 @@ import { useStore } from 'store';
 import config from 'config';
 import { isMobile } from 'utils';
 import useStyles from './useStyles';
-import {styled} from "@mui/material/styles";
+import {styled, useTheme} from "@mui/material/styles";
+import {MyPaper} from 'theme';
+import ReplyIcon from '@mui/icons-material/Reply';
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import Paper from "@material-ui/core/Paper";
-
-const MyPaper = styled(Paper)(({ theme }) => ({
-    backgroundColor: theme.palette.background.paper,
-    color: theme.palette.text.primary,
-    button: {
-        color: theme.palette.text.primary,
-        border: `1px solid ${theme.palette.text.primary}`,
-    },
-}));
-
 const Settings = _ => {
     const classes = useStyles({ isMobile });
     const [isEditorReady, setIsEditorReady] = useState(false);
@@ -29,20 +22,8 @@ const Settings = _ => {
     } = useStore();
 
     const editorRef = useRef();
+    const theme = useTheme()
 
-    function handleLanguageChange(ev) {
-        setSelectedLanguageId(ev.target.value);
-    }
-
-    function handleThemeChange(ev) {
-        const theme = ev.target.value;
-
-        if (config.defaultThemes.includes(theme)) {
-            setMonacoTheme(theme);
-        } else {
-            defineTheme(theme).then(_ => setMonacoTheme(theme));
-        }
-    }
 
     function getEditorValue() {
         return editorRef.current?.getValue();
@@ -60,22 +41,76 @@ const Settings = _ => {
 
 
     return (
-        <MyPaper className={classes.root}>
-
-            <Typography variant="h5">AI Console</Typography>
-            <Divider />
-                <div className={classes.editor}>
+        <div className={classes.root}>
+            <MyPaper className={classes.editor}>
+                <Typography variant="h5">AI Console</Typography>
+                <div className={classes.editorWrapper}>
                     <Editor
+                        key="monaco_editor"
                         theme={monacoTheme}
                         language="markdown"
-                        height="70vh"
+                        height="50vh"
+
                         value=''
                         onMount={handleEditorDidMount}
+                        options={{
+                            minimap: {
+                                enabled: false,
+                            },
+                            scrollbar: {
+                                useShadows: false,
+                            },
+                            lineNumbers: "off",
+                            renderLineHighlight: 'none',
+                        }}
                     />
-                    <Button className={classes.execute_button} variant="outlined" disabled={!isEditorReady} onClick={handleApply}>Apply</Button>
                 </div>
-                        </MyPaper>
-    );
+            </MyPaper>
+            <MyPaper className={classes.messenger}
+                   sx={{
+                           marginTop: 1,
+                       }}
+
+            >
+                <div className={classes.messangerWrapper}>
+                    <Editor
+                        key="monaco_editor"
+                        theme={monacoTheme}
+                        language="markdown"
+                        height="11vh"
+                        value=''
+                        onMount={handleEditorDidMount}
+                        options={{
+                            minimap: {
+                                enabled: false,
+                            },
+                            scrollbar: {
+                                useShadows: false,
+                            },
+                            lineNumbers: "off",
+                            renderLineHighlight: 'none',
+                            fontFamily: "monospace",
+                            fontSize: "15"
+                        }}
+                    />
+                </div>
+                <div className={classes.buttonContainer}>
+                <div className={classes.spacer}/>
+
+                <Button className={classes.execute_button}
+                        variant="contained"
+                        disabled={!isEditorReady}
+                        endIcon={<ReplyIcon/>}
+                        onClick={handleApply}
+
+                >
+                    Run
+                </Button>
+                </div>
+            </MyPaper>
+        </div>
+    )
+        ;
 };
 
 export default Settings;

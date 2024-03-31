@@ -21,12 +21,46 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import Divider from "@mui/material/Divider";
 import Box from "@mui/material/Box";
 import Content from 'sections/Content';
+import Editor from 'sections/Editor';
 import Paper from "@material-ui/core/Paper";
 import SideBar from "../SideBar";
-import { MuiThemeProvider } from 'theme';
+import { MuiThemeProvider, MyPaper } from 'theme';
 
-const drawerWidth = 150;
+const drawerWidth = 200;
 
+const MainPaper = styled(Paper)(({ theme }) => ({
+    backgroundColor: theme.palette.background.paper,
+    color: theme.palette.text.primary,
+    button: {
+        color: theme.palette.text.primary,
+        border: `2px solid ${theme.palette.text.primary}`,
+    },
+    fields: {
+        color: theme.palette.text.primary,
+        border: `2px solid ${theme.palette.text.primary}`,
+    },
+    height: '94vh',
+    width: '92vw',
+}));
+
+const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
+    ({ theme, open }) => ({
+        flexGrow: 1,
+        padding: theme.spacing(3),
+        transition: theme.transitions.create('margin', {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen,
+        }),
+        marginLeft: `0px`,
+        ...(open && {
+            transition: theme.transitions.create('margin', {
+                easing: theme.transitions.easing.easeOut,
+                duration: theme.transitions.duration.enteringScreen,
+            }),
+            marginLeft: 0,
+        }),
+    }),
+);
 const openedMixin = (theme) => ({
     width: drawerWidth,
     transition: theme.transitions.create('width', {
@@ -42,9 +76,9 @@ const closedMixin = (theme) => ({
         duration: theme.transitions.duration.leavingScreen,
     }),
     overflowX: 'hidden',
-    width: `calc(${theme.spacing(5)} + 1px)`,
+    width: `calc(${theme.spacing(7)} + 1px)`,
     [theme.breakpoints.up('sm')]: {
-        width: `calc(${theme.spacing(6)} + 1px)`,
+        width: `calc(${theme.spacing(8)} + 1px)`,
     },
 });
 
@@ -92,7 +126,6 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
     }),
 );
 
-
 export default function Header_SideBar() {
     const theme = useTheme();
     const [open, setOpen] = React.useState(false);
@@ -101,9 +134,6 @@ export default function Header_SideBar() {
         setOpen(true);
     };
 
-    const handleDrawerClose = () => {
-        setOpen(false);
-    };
 
     const handleDrawerToggle = () => {
         setOpen(!open);
@@ -122,39 +152,34 @@ export default function Header_SideBar() {
         state: { themeMode, editorMode, isSettingsVisible },
         actions: { setThemeMode, setEditorMode, setIsSettingsVisible },
     } = useStore();
-    console.log("themeMode", themeMode);
+
     const [settingsRotate, setSettingsRotate] = useState(false);
     const classes = useStyles();
 
-
-    console.log(themeMode);
-    console.log(theme.palette.mode, theme.palette.background.default, theme.palette.mode === 'dark' ? '#313131' : '#FFFFFF');
-    return (
+   return (
         <MuiThemeProvider>
         <>
             <Box sx={{
                 display: 'flex',
                 alignItems: 'left',
-                justifyContent: 'left',
+                justifyContent: 'center',
                 background: theme.palette.background.paper,
             }}>
                 <CssBaseline/>
-                <AppBar style={{ background: theme.palette.primary.main }}>
-                <Toolbar>
+                <AppBar style={{ background: theme.palette.primary.main, border: "1px solid #464646" }}>
+                <Toolbar >
                     <IconButton
                         color="inherit"
                         aria-label="open drawer"
                         onClick={handleDrawerToggle}
                         edge="start"
-                        sx={{
-                            marginRight: 15,
-                        }}
+
                     >
                         <MenuIcon />
                     </IconButton>
 
                     {!isMobile && (
-                        <Typography variant="h4" className={classes.title}>
+                        <Typography variant="h5" className={classes.title}>
                             BrainPower>AI
                         </Typography>
                     )}
@@ -186,12 +211,15 @@ export default function Header_SideBar() {
                     variant="permanent"
                     open={open}
                     sx={{
-                    '& .MuiDrawer-paper': {
-                        bgcolor: theme.palette.mode === 'dark' ? '#2B2D30' : '#FFFFFF',
+                        '& .MuiDrawer-paper': {
+
+                            bgcolor: theme.palette.mode === 'dark' ? '#282828' : '#FFFFFF',
+                            color: theme.palette.text.primary,
+                            border: "1px solid #464646"
                     },
                 }}>
                     <DrawerHeader>
-                        <IconButton onClick={handleDrawerClose}>
+                        <IconButton onClick={handleDrawerToggle}>
                             {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
                         </IconButton>
                     </DrawerHeader>
@@ -199,9 +227,10 @@ export default function Header_SideBar() {
 
                     <SideBar />
                 </Drawer>
-                <Box component="main" sx={{ flexGrow: 1}}  >
-                    <DrawerHeader />
-                    <Paper
+                <Main open={open}>
+
+
+                    <MainPaper
                         elevation={0}
                         square={true}
                         className={classNames('full-size', classes.root)}
@@ -209,12 +238,14 @@ export default function Header_SideBar() {
                            '& .MuiDrawer-paper': {
                                bgcolor: theme.palette.mode === 'dark' ? '#2B2D30' : '#FFFFFF',
                            },
-                           backgroundColor: theme.palette.background.paper, // add this line
-                        }}>
-                        <Content />
+                           backgroundColor: theme.palette.background.paper,
+                            marginRight: 0,
 
-                    </Paper>
-                </Box>
+                        }}>
+                        <Editor />
+
+                    </MainPaper>
+                </Main>
             </Box>
             <Notifications />
         </>

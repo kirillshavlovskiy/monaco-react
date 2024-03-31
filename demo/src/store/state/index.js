@@ -13,7 +13,7 @@ const initialState = {
   editor: {
     selectedLanguageId: 19, // 19 is the id of javasctipt
     options: {
-
+      inlayHintsOptions: true,
       acceptSuggestionOnCommitCharacter: true,
       acceptSuggestionOnEnter: 'on',
       accessibilitySupport: 'auto',
@@ -44,20 +44,22 @@ const initialState = {
         enabled: true,
       },
       scrollbar: {
-        horizontalSliderSize: 18,
-        verticalSliderSize: 18,
+        useShadows: true,
+        horizontalSliderSize: 1,
+        verticalSliderSize: 1,
       },
       mouseWheelZoom: true,
       multiCursorMergeOverlapping: true,
       multiCursorModifier: 'alt',
       overviewRulerBorder: true,
       overviewRulerLanes: 2,
+      provideInlayHints: true,
       quickSuggestions: true,
       quickSuggestionsDelay: 100,
       readOnly: false,
       renderControlCharacters: false,
       renderFinalNewline: true,
-      renderIndentGuides: true,
+      renderIndentGuides: false,
       renderLineHighlight: 'none',
       renderWhitespace: 'none',
       revealHorizontalRightPadding: 30,
