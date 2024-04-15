@@ -1,58 +1,60 @@
-import React, { useState } from 'react';
-import { Box } from '@mui/material';
-import { withStyles } from '@material-ui/core/styles';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import RemoveIcon from '@mui/icons-material/Remove';
+import * as React from 'react';
+import AddBoxIcon from '@mui/icons-material/AddBox';
+import IndeterminateCheckBoxIcon from '@mui/icons-material/IndeterminateCheckBox';
+import SvgIcon, { SvgIconProps } from '@mui/material/SvgIcon';
+import { styled } from '@mui/material/styles';
+import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
+import { TreeItem, treeItemClasses } from '@mui/x-tree-view/TreeItem';
 
-import TreeView from '@material-ui/lab/TreeView';
-import TreeItem from '@material-ui/lab/TreeItem';
-import { alpha } from '@mui/system';
-
-
-
-
-const styles = theme => ({
-    root: {
-        '&.MuiTreeItem-root > .MuiTreeItem-content > .MuiTreeItem-iconContainer .close': {
+const CustomTreeItem = styled(TreeItem)({
+    [`& .${treeItemClasses.iconContainer}`]: {
+        '& .close': {
             opacity: 0.3,
         },
-        '&.MuiTreeItem-root .MuiTreeItem-group': {
-            marginLeft: 15,
-            paddingLeft: 18,
-            borderLeft: `1px dashed ${alpha(theme.palette.text.primary, 0.4)}`,
-        },
-    }
+    },
 });
 
-const StyledTreeItem = withStyles(styles)(({ classes, ...others }) => (
-    <TreeItem {...others} className={classes.root} />
-));
-
-
-
-
+function CloseSquare(props: SvgIconProps) {
     return (
-
-            <Box sx={{ minHeight: 270, flexGrow: 1, maxWidth: 300 }}>
-                    <TreeView
-                        aria-label="customized"
-                        defaultExpanded={['1']}
-                        defaultCollapseIcon={<ExpandMoreIcon />}
-                        defaultExpandIcon={<ChevronRightIcon />}
-                        defaultEndIcon={<RemoveIcon />}
-                        style={{ overflowX: 'hidden', minHeight: 270, flexGrow: 1, maxWidth: 300 }}
-                    >
-                        <StyledTreeItem nodeId="1" label="Main">
-                            <StyledTreeItem nodeId="2" label="Child of Main">
-                                <StyledTreeItem nodeId="3" label="Grandchild of Main">
-                                    <StyledTreeItem nodeId="4" label="Great Grandchild of Main" />
-                                </StyledTreeItem>
-                            </StyledTreeItem>
-                        </StyledTreeItem>
-                    </TreeView>
-
-            </Box>
-
+        <SvgIcon
+            className="close"
+            fontSize="inherit"
+            style={{ width: 14, height: 14 }}
+            {...props}
+        >
+            {/* tslint:disable-next-line: max-line-length */}
+            <path d="M17.485 17.512q-.281.281-.682.281t-.696-.268l-4.12-4.147-4.12 4.147q-.294.268-.696.268t-.682-.281-.281-.682.294-.669l4.12-4.147-4.12-4.147q-.294-.268-.294-.669t.281-.682.682-.281.696 .268l4.12 4.147 4.12-4.147q.294-.268.696-.268t.682.281 .281.669-.294.682l-4.12 4.147 4.12 4.147q.294.268 .294.669t-.281.682zM22.047 22.074v0 0-20.147 0h-20.12v0 20.147 0h20.12zM22.047 24h-20.12q-.803 0-1.365-.562t-.562-1.365v-20.147q0-.776.562-1.351t1.365-.575h20.147q.776 0 1.351.575t.575 1.351v20.147q0 .803-.575 1.365t-1.378.562v0z" />
+        </SvgIcon>
     );
 }
+
+export default function Structure() {
+    return (
+        <SimpleTreeView
+            aria-label="customized"
+            defaultExpandedItems={['1']}
+            slots={{
+                expandIcon: AddBoxIcon,
+                collapseIcon: IndeterminateCheckBoxIcon,
+                endIcon: CloseSquare,
+            }}
+            sx={{ overflowX: 'hidden', minHeight: 270, flexGrow: 1, maxWidth: 300 }}
+        >
+            <CustomTreeItem itemId="1" label="Main">
+                <CustomTreeItem itemId="2" label="Hello" />
+                <CustomTreeItem itemId="3" label="Subtree with children">
+                    <CustomTreeItem itemId="6" label="Hello" />
+                    <CustomTreeItem itemId="7" label="Sub-subtree with children">
+                        <CustomTreeItem itemId="9" label="Child 1" />
+                        <CustomTreeItem itemId="10" label="Child 2" />
+                        <CustomTreeItem itemId="11" label="Child 3" />
+                    </CustomTreeItem>
+                    <CustomTreeItem itemId="8" label="Hello" />
+                </CustomTreeItem>
+                <CustomTreeItem itemId="4" label="World" />
+                <CustomTreeItem itemId="5" label="Something something" />
+            </CustomTreeItem>
+        </SimpleTreeView>
+    );
+}
+

@@ -1,8 +1,8 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import MenuIcon from '@mui/icons-material/Menu';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
-import Button from '@material-ui/core/Button';
+
 import classNames from 'classnames';
 import Notifications from 'notifications';
 import { useStore } from 'store';
@@ -22,28 +22,26 @@ import Divider from "@mui/material/Divider";
 import Box from "@mui/material/Box";
 import Content from 'sections/Content';
 import Editor from 'sections/Editor';
+import Settings from 'sections/Settings';
 import Paper from "@material-ui/core/Paper";
 import SideBar from "../SideBar";
-import { MuiThemeProvider, MyPaper } from 'theme';
+import { MuiThemeProvider} from 'theme';
+import { Modal, Button } from '@mui/material';
 
 const drawerWidth = 200;
+
 
 const MainPaper = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.background.paper,
     color: theme.palette.text.primary,
-    button: {
-        color: theme.palette.text.primary,
-        border: `2px solid ${theme.palette.text.primary}`,
-    },
-    fields: {
-        color: theme.palette.text.primary,
-        border: `2px solid ${theme.palette.text.primary}`,
-    },
     height: '94vh',
     width: '92vw',
+    marginRight: -5,  // add right margin
 }));
 
-const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
+const Main = styled('main', {
+    shouldForwardProp: (prop) => prop !== 'open',
+})(
     ({ theme, open }) => ({
         flexGrow: 1,
         padding: theme.spacing(3),
@@ -51,14 +49,15 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
         }),
-        marginLeft: `0px`,
+        marginLeft: `20px`,
         ...(open && {
             transition: theme.transitions.create('margin', {
                 easing: theme.transitions.easing.easeOut,
                 duration: theme.transitions.duration.enteringScreen,
             }),
-            marginLeft: 0,
+
         }),
+        paddingLeft: open ? `${drawerWidth}px` : 0,
     }),
 );
 const openedMixin = (theme) => ({
@@ -109,6 +108,16 @@ const AppBar = styled(MuiAppBar, {
     }),
 }));
 
+const DrawerSettingsHeader = styled('div')(({ theme }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    padding: theme.spacing(0, 1),
+    // necessary for content to be below app bar
+    ...theme.mixins.toolbar,
+    justifyContent: 'flex-start',
+}));
+
+
 const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
     ({ theme, open }) => ({
         width: drawerWidth,
@@ -129,7 +138,7 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 export default function Header_SideBar() {
     const theme = useTheme();
     const [open, setOpen] = React.useState(false);
-
+    const [openSettingsModal, setOpenSettingsModal] = useState(false);
     const handleDrawerOpen = () => {
         setOpen(true);
     };
@@ -145,7 +154,8 @@ export default function Header_SideBar() {
 
     const handleSettingsClick = () => {
         setSettingsRotate(!settingsRotate);
-        setIsSettingsVisible(!isSettingsVisible);
+        setIsSettingsVisible();
+        console.log(isSettingsVisible);
     };
 
     const {
@@ -155,6 +165,12 @@ export default function Header_SideBar() {
 
     const [settingsRotate, setSettingsRotate] = useState(false);
     const classes = useStyles();
+    useEffect(() => {
+    console.log(isSettingsVisible);
+    }, [isSettingsVisible]);
+
+    const handleOpenSettingsModal = () => setOpenSettingsModal(true);
+    const handleCloseSettingsModal = () => setOpenSettingsModal(false);
 
    return (
         <MuiThemeProvider>
@@ -166,7 +182,7 @@ export default function Header_SideBar() {
                 background: theme.palette.background.paper,
             }}>
                 <CssBaseline/>
-                <AppBar style={{ background: theme.palette.primary.main, border: "1px solid #464646" }}>
+                <AppBar style={{ background: theme.palette.primary.main }}>
                 <Toolbar >
                     <IconButton
                         color="inherit"
@@ -194,11 +210,11 @@ export default function Header_SideBar() {
                             alt="theme mode icon"
                         />
                     </Button>
-                    <Button onClick={handleSettingsClick}>
+                    <Button onClick={handleOpenSettingsModal}>
                         <SettingsIcon
                             className={classNames(classes.settingsSwitcher, {[classes.rotate]: settingsRotate})}
                             style={{
-                                filter: settingsRotate ? 'none' : 'brightness(0.5)',
+                                filter: openSettingsModal ? 'none' : 'brightness(0.5)',
                                 color: theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.common.black
                             }}
                         />
@@ -213,7 +229,7 @@ export default function Header_SideBar() {
                     sx={{
                         '& .MuiDrawer-paper': {
 
-                            bgcolor: theme.palette.mode === 'dark' ? '#282828' : '#FFFFFF',
+                            bgcolor: theme.palette.mode === 'dark' ? '#323232' : '#FFFFFF',
                             color: theme.palette.text.primary,
                             border: "1px solid #464646"
                     },
@@ -224,12 +240,29 @@ export default function Header_SideBar() {
                         </IconButton>
                     </DrawerHeader>
                     <Divider />
-
                     <SideBar />
                 </Drawer>
+                <Modal
+                    open={openSettingsModal}
+                    onClose={handleCloseSettingsModal}
+                    aria-labelledby="settings-modal-title"
+                    aria-describedby="settings-modal-description"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} // Centering the modal
+                >
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            width: 500, // Adjust according to your needs
+                            bgcolor: 'background.paper',
+                            boxShadow: 24,
+                            p: 0,  // Padding inside the Box
+                            outline: 'none'  // Remove the focus outline
+                        }}
+                    >
+                        <Settings /> {/* Your Settings Component */}
+                    </Box>
+                </Modal>
                 <Main open={open}>
-
-
                     <MainPaper
                         elevation={0}
                         square={true}
@@ -245,7 +278,9 @@ export default function Header_SideBar() {
                         <Editor />
 
                     </MainPaper>
+
                 </Main>
+
             </Box>
             <Notifications />
         </>

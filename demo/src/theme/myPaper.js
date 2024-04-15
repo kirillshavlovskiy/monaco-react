@@ -1,21 +1,28 @@
-// MyPaper.js
-
+import React, { useState, useEffect } from 'react';
 import { styled } from '@mui/system';
 import Paper from '@mui/material/Paper';
+import { useStore } from 'store';
 
-export const MyPaper = styled(Paper)(({ theme }) => ({
+const MyPaperComp = styled(Paper)(({ theme }) => ({
     background: theme.palette.background.paper,
     border: `1px solid ${theme.palette.text.secondary}`,
     color: theme.palette.text.primary,
-    '& button': {
-        color: "#1E1E23",
-        border: `0px solid ${theme.palette.text.primary}`,
-        backgroundColor: '#90CAF9',
-
-    },
-
     marginTop: 60,
     padding: 20,
-
-
 }));
+
+export const MyPaper = ({ monacoTheme, ...props }) => {
+    const { state: { themeBackground, fontColor } } = useStore();
+    const [themeBkgd, setThemeBkgd] = useState(themeBackground);
+    const [fontClr, setFontClr] = useState(fontColor);
+
+    useEffect(() => {
+        setThemeBkgd(themeBackground);
+    }, [themeBackground]);
+
+    useEffect(() => {
+        setFontClr(fontColor);
+    }, [fontColor]);
+
+    return <MyPaperComp {...props} style={{ background: themeBkgd, color: fontClr }} />
+}

@@ -49,6 +49,19 @@ const diffEditor = {
   setSelectedLanguageId: setSelectedLanguageId('diffEditor'),
 };
 
+export const defineAndSetThemeBackground = async ({ state, actions, effects }, theme) => {
+  const themeData = await effects.defineTheme(theme);
+  actions.setThemeBackground(themeData.colors['editor.background']);
+};
+
+const setThemeBackground = ({ state }, color) => {
+  state.themeBackground = color;
+};
+
+const setFontColor = ({ state }, color) => {
+  state.fontColor = color;
+};
+
 export {
   hideNotification,
   setThemeMode,
@@ -56,6 +69,8 @@ export {
   setIsEditorReady,
   showNotification,
   setIsSettingsVisible,
+  setFontColor,
+  setThemeBackground,
   editor,
   diffEditor,
 };

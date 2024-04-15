@@ -1,4 +1,5 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
+//import { Chat, Channel, ChannelHeader, MessageList, MessageInput } from 'stream-chat-react';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import Button from '@material-ui/core/Button';
@@ -10,9 +11,20 @@ import useStyles from './useStyles';
 import {styled, useTheme} from "@mui/material/styles";
 import {MyPaper} from 'theme';
 import ReplyIcon from '@mui/icons-material/Reply';
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import { withStyles } from '@material-ui/core/styles';
 import Paper from "@material-ui/core/Paper";
-const Settings = _ => {
+
+const CustomDivider = withStyles((theme) => ({
+    root: {
+        marginTop: theme.spacing(2),
+        marginBottom: theme.spacing(2),
+        color: theme.palette.text.primary
+        // Add marginLeft and marginRight for horizontal margins
+    },
+}))(Divider);
+
+
+const Console = _ => {
     const classes = useStyles({ isMobile });
     const [isEditorReady, setIsEditorReady] = useState(false);
     const {
@@ -21,8 +33,11 @@ const Settings = _ => {
         effects: { defineTheme, monacoThemes },
     } = useStore();
 
-    const editorRef = useRef();
+    const [messages, setMessages] = useState([]);
     const theme = useTheme()
+    const editorRef = useRef();
+    const [consoleText, setConsoleText] = useState(''); // Store received messages from backend
+    const webSocketRef = useRef(null); // Reference to the WebSocket connection
 
 
     function getEditorValue() {
@@ -34,83 +49,77 @@ const Settings = _ => {
         editorRef.current = editor;
     }
 
-    function handleApply() {
+    function handleSend() {
         const currentValue = getEditorValue();
-
+        webSocketRef.current.send(currentValue); // Send message to the backend using WebSocket
     }
 
+    useEffect(() => {
+        webSocketRef.current = new WebSocket('ws://localhost:8000/chat'); // Replace with your WebSocket endpoint
+        webSocketRef.current.onmessage = (event) => {
+            // Receive messages from backend and update console
+            setConsoleText(prevText => prevText + '\n' + event.data);
+        };
+        return () => {
+            webSocketRef.current.close(); // Close WebSocket connection on component unmount
+        };
+    }, []);
 
-    return (
+        return (
         <div className={classes.root}>
-            <MyPaper className={classes.editor}>
-                <Typography variant="h5">AI Console</Typography>
-                <div className={classes.editorWrapper}>
-                    <Editor
-                        key="monaco_editor"
-                        theme={monacoTheme}
-                        language="markdown"
-                        height="50vh"
-
-                        value=''
-                        onMount={handleEditorDidMount}
-                        options={{
-                            minimap: {
-                                enabled: false,
-                            },
-                            scrollbar: {
-                                useShadows: false,
-                            },
-                            lineNumbers: "off",
-                            renderLineHighlight: 'none',
-                        }}
-                    />
-                </div>
-            </MyPaper>
-            <MyPaper className={classes.messenger}
-                   sx={{
-                           marginTop: 1,
-                       }}
-
+            <MyPaper className={classes.editor}
+                     style={{paddingTop: "-10px"}}
             >
-                <div className={classes.messangerWrapper}>
-                    <Editor
-                        key="monaco_editor"
-                        theme={monacoTheme}
-                        language="markdown"
-                        height="11vh"
-                        value=''
-                        onMount={handleEditorDidMount}
-                        options={{
-                            minimap: {
-                                enabled: false,
-                            },
-                            scrollbar: {
-                                useShadows: false,
-                            },
-                            lineNumbers: "off",
-                            renderLineHighlight: 'none',
-                            fontFamily: "monospace",
-                            fontSize: "15"
-                        }}
-                    />
+                <Typography variant="h5">AI Console</Typography>
+                <div className="chat-container">
+                    <ul>
+                        {messages.map((message, index) => (
+                            <li key={index}>{message}</li>
+                        ))}
+                    </ul>
                 </div>
+
+                <Divider sx={{my: 2}}/>
+                <Editor
+                    key="monaco_editor"
+                    theme={monacoTheme}
+                    language="markdown"
+                    height="21vh"
+                    width="60vh"
+
+                    value=''
+                    onMount={handleEditorDidMount}
+                    options={{
+                        minimap: {
+                            enabled: false,
+                        },
+                        scrollbar: {
+                            useShadows: false,
+                        },
+                        lineNumbers: "off",
+                        renderLineHighlight: 'none',
+                        fontFamily: "monospace",
+                        fontSize: "15"
+                    }}
+                />
+
                 <div className={classes.buttonContainer}>
-                <div className={classes.spacer}/>
+                    <div className={classes.spacer}/>
 
-                <Button className={classes.execute_button}
-                        variant="contained"
-                        disabled={!isEditorReady}
-                        endIcon={<ReplyIcon/>}
-                        onClick={handleApply}
+                    <Button className={classes.execute_button}
+                            variant="contained"
+                            disabled={!isEditorReady}
+                            endIcon={<ReplyIcon/>}
+                            onClick={handleSend}
 
-                >
-                    Run
-                </Button>
+                    >
+                        Run
+                    </Button>
                 </div>
             </MyPaper>
         </div>
-    )
-        ;
+        )
+
 };
 
-export default Settings;
+export default Console;

@@ -32,7 +32,7 @@ const initialState = {
       folding: true,
       foldingStrategy: 'auto',
       fontSize: 14,
-      fontFamily: 'monospace',
+      fontFamily: 'JetBrains Mono',
       fontLigatures: false,
       formatOnPaste: false,
       formatOnType: false,
@@ -87,6 +87,8 @@ const initialState = {
   },
 
   editorMode: 'editor',
+  themeBackground: '#1E1E1E',
+  fontColor: '#EDECE4',
 
   monacoTheme: initalTheme === 'dark' ? 'vs-dark' : initalTheme,
 

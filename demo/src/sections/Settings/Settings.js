@@ -11,19 +11,27 @@ import { isMobile } from 'utils';
 import useStyles from './useStyles';
 import {withStyles} from "@material-ui/core/styles";
 import { useTheme } from '@mui/material';
-
+import { MyPaper } from 'theme';
 
 const CustomTextField = withStyles((theme) => ({
   root: {
     '& .MuiFilledInput-input': {
-      backgroundColor: theme.palette.background.paper
+      backgroundColor: '#323232',
+      color: '#FFFFFF',
     },
     '& .MuiFilledInput-underline:before': {
-      borderBottomColor: theme.palette.background.paper
+      borderBottomColor: '#FFFFFF'
     },
     '& .MuiFilledInput-underline:after': {
       borderBottomColor: theme.palette.text.primary
-    }
+    },
+    '& .MuiInputLabel-outlined:not(.MuiInputLabel-shrink)': {
+      color: 'green',
+    },
+    // Focused label
+    '& .MuiInputLabel-shrink': {
+      color: 'orange',
+    },
   }
 }))(TextField);
 
@@ -51,8 +59,10 @@ const Settings = _ => {
 
     if (config.defaultThemes.includes(theme)) {
       setMonacoTheme(theme);
+
     } else {
       defineTheme(theme).then(_ => setMonacoTheme(theme));
+
     }
   }
 
@@ -80,7 +90,7 @@ const Settings = _ => {
   }
 
   return (
-    <div className={classes.root}>
+    <MyPaper className={classes.root}>
       <Typography variant="h5">Settings</Typography>
       <Divider />
       <div className={classes.languages}
@@ -141,7 +151,7 @@ const Settings = _ => {
         </div>
         <Button variant="outlined" disabled={!isEditorReady} onClick={handleApply}>>Apply</Button>
       </div>
-    </div>
+    </MyPaper>
   );
 };
 

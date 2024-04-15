@@ -7,10 +7,32 @@ const MuiThemeProvider = ({ children }) => {
   const { state: { themeMode } } = useStore();
 
   const theme = createTheme({
-    palette: {
+  components: {
+      MuiTab: {
+          styleOverrides: {
+              root: {
+                  textTransform: "none",
+                  font: "inherit",
+                  fontSize: "h5.fontSize",
+                  minHeight: "auto",
+                  letterSpacing: "-0.5px",  // Adjust this value to your liking
+                  "&:hover": {
+                      color: "primary",
+                      opacity: 1,
+                  },
+                  "&$selected": {
+                      color: "primary",
+                      fontWeight: "theme.typography.fontWeightMedium",
+                  },
+                  "&:focus": {},
+              },
+          },
+      },
+  },
+  palette: {
       mode: themeMode,
       primary: themeMode === 'dark' ? {
-        main: '#393939' // main color for dark mode
+        main: '#3C3C3C' // main color for dark mode
       } : {
         main: '#EDECE4' // main color for light mode
       },

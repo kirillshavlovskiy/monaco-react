@@ -1,4 +1,5 @@
 import { makeStyles } from '@material-ui/core/styles';
+const drawerTopMargin = "64px";
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -48,6 +49,11 @@ const useStyles = makeStyles(theme => ({
   rotate: {
   transform: 'rotate(0)',
   },
+  drawerSettings: {
+    marginTop: drawerTopMargin,
+    width: 250, // adjust this to your needs
+    flexShrink: 0,
+  }
 }));
 
 export default useStyles;

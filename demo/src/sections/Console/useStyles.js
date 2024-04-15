@@ -39,7 +39,7 @@ const useStyles = makeStyles(theme => ({
       borderRadius: '5px',
     },
     padding: 2,
-    marginTop: 10,
+    margin: 10,
   },
   messangerWrapper: {
     backgroundColor: '#1D1D1D',
@@ -61,6 +61,7 @@ const useStyles = makeStyles(theme => ({
   execute_button: {
     marginTop: 15,
     marginButtom: 0,
+    backgroundColor: '#90CAF9',
   }
 }));
 
