@@ -19,7 +19,6 @@ import Tabs from '@material-ui/core/Tabs';
 import Box from '@mui/material/Box';
 import axios from 'axios';
 
-
 const Editor = () => {
     const theme=useTheme();
     const classes = useStyles();
@@ -147,7 +146,7 @@ const Editor = () => {
                             key="monaco_editor"
                             theme={monacoTheme}
                             height="70vh"
-                            width="95vh"
+                            width="75vh"
                             path={language}
                             defaultValue={editorContent}
                             defaultLanguage={language}
