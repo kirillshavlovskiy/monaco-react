@@ -52,7 +52,6 @@ function Chat() {
             setLog(log => [...log, `Sent: ${message}`]);
             setMessage("");
         }
-
         // If you have the processMessageToChatGPT function implemented
         // await processMessageToChatGPT(newMessages);
     };
@@ -82,7 +81,6 @@ function Chat() {
         webSocket.current.onclose = (event) => {
             console.log("WebSocket closed connection:", event);
         };
-
 
         return () => {
             webSocket.current.close();
