@@ -83,6 +83,7 @@ function Chat() {
             console.log("WebSocket closed connection:", event);
         };
 
+
         return () => {
             webSocket.current.close();
         };
