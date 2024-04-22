@@ -23,13 +23,14 @@ const MainPaper = styled(Paper)(({ theme }) => ({
     },
 }));
 
+
   return (
     <MainPaper
         elevation={0}
         square={true}
         className={classNames('full-size', classes.root)}
     >
-      <Editor />
+
     </MainPaper>
   );
 }
