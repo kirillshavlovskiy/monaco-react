@@ -17,9 +17,8 @@ import MonacoEditor from "@monaco-editor/react";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
 import Box from "@mui/material/Box";
+import ai_code from "../../config/ai";
 import Interface from "../Editor/Interface/Interface";
-import axios from 'axios';
-
 
 const CustomDivider = withStyles((theme) => ({
     root: {
@@ -39,15 +38,17 @@ const Console = _ => {
         actions: { editor: { setSelectedLanguageId, setOptions, setMonacoTheme }, showNotification },
         effects: { defineTheme, monacoThemes },
     } = useStore();
-    const [aiCode, setAiCode] = useState("");
+
     const [messages, setMessages] = useState([]);
     const theme = useTheme()
     const editorRef = useRef();
     const [consoleText, setConsoleText] = useState(''); // Store received messages from backend
+
     //const [editorWidth, setEditorWidth] = useState('50%');
 
     const { state: { editor: themeBackground, fontColor, isSettingsVisible, isSideBarVisible }, actions: setThemeBackground } = useStore();
     const language = config.supportedLanguages.find(({ id }) => id === selectedLanguageId).name;
+    const [newEditorContent, setNewEditorContent] = useState(ai_code || '');
     const [consoleValue, setConsoleValue] = React.useState(0);
     const [fontClr, setFontClr] = useState(fontColor);
 
@@ -118,17 +119,7 @@ const Console = _ => {
         setFontClr(fontColor);
     }, [fontColor]);
 
-    useEffect(() => {
-        // Adjust the url as per where your code.py file is located.
-        axios.get('../../config/code.py')
-            .then((res) => {
-                setAiCode(res.data);
-            });
-    }, []);
-
-
-
-    return (
+        return (
         <div className={classes.root}>
             <MyPaper className={classes.editor}
                      sx={{
@@ -148,8 +139,8 @@ const Console = _ => {
                     style={{marginTop: "-20px", marginBottom: "15px", hight: "7.5px"}}
                 >
                     <StyledTab className={classes.tab} label="Chat" />
-                    <StyledTab className={classes.tab} label="AI Werk" />
-                    <StyledTab className={classes.tab} label="Chat-test" />
+                    <StyledTab className={classes.tab} label="Agents" />
+                    <StyledTab className={classes.tab} label="Graph" />
 
                 </StyledTabs>
 
@@ -160,11 +151,11 @@ const Console = _ => {
                     <Editor
                         key="monaco_editor"
                         theme={monacoTheme}
-                        defaultLanguage="python"
+                        defaultLanguage={language}
                         height="71vh"
                         width="75vh"
 
-                        defaultValue={aiCode}
+                        defaultvalue={newEditorContent}
                         onMount={handleEditorDidMount}
                         options={options}
                     />

@@ -11,7 +11,7 @@ const initialState = {
   notifications: config.notifications.defaultState,
 
   editor: {
-    selectedLanguageId: 19, // 19 is the id of javasctipt
+    selectedLanguageId: 37, // 19 is the id of javasctipt
     options: {
       inlayHintsOptions: true,
       acceptSuggestionOnCommitCharacter: true,
@@ -89,7 +89,8 @@ const initialState = {
   editorMode: 'editor',
   themeBackground: '#1E1E1E',
   fontColor: '#EDECE4',
-
+  newCode: '',
+  ai_editorValue: '',
   monacoTheme: initalTheme === 'dark' ? 'vs-dark' : initalTheme,
 
   diffEditor: {

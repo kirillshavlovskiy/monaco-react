@@ -90,68 +90,67 @@ const Settings = _ => {
   }
 
   return (
-    <MyPaper className={classes.root}>
-      <Typography variant="h5">Settings</Typography>
-      <Divider />
-      <div className={classes.languages}
-           style={{ color: theme.palette.text.primary }}>
-        <Typography className={classes.title} variant="h6">Languages</Typography>
-        <CustomTextField
-            select
-            variant="filled"
-            value={selectedLanguageId}
-            onChange={handleLanguageChange}
-            className="full-width"
-            label="Language"
-        >
-          {config.supportedLanguages.map(language => (
-            <MenuItem key={language.id} value={language.id}>
-              {language.name}
-            </MenuItem>
-          ))}
-        </CustomTextField>
-      </div>
-
-      <div>
-        <Typography className={classes.title} variant="h6">Themes</Typography>
-        <CustomTextField
-          select
-          variant="filled"
-          value={monacoTheme}
-          onChange={handleThemeChange}
-          className="full-width"
-          label="Theme"
-        >
-          {config.defaultThemes.map(theme => (
-            <MenuItem key={theme} value={theme}>
-              {theme}
-            </MenuItem>
-          ))}
-          <MenuItem disabled><Divider /></MenuItem>
-          {Object.entries(monacoThemes).map(([themeId, themeName]) => (
-            <MenuItem key={themeId} value={themeId}>
-              {themeName}
-            </MenuItem>
-          ))}
-        </CustomTextField>
-      </div>
-
-      <div>
-        <Typography className={classes.title} variant="h5">Options</Typography>
-
-
-        <div className={classes.editor}>
-          <Editor
-            theme={monacoTheme}
-            language="json"
-            height={400}
-            value={JSON.stringify(options, null, 2)}
-            onMount={handleEditorDidMount}
-          />
+      <MyPaper className={classes.root}>
+        <Typography className={classes.title} variant="h6">Settings</Typography>
+        <Divider/>
+        <div>
+          <Typography className={classes.title} variant="h6">Languages</Typography>
+          <CustomTextField
+              select
+              variant="filled"
+              value={selectedLanguageId}
+              onChange={handleLanguageChange}
+              className="full-width"
+              label="Language"
+          >
+            {config.supportedLanguages.map(language => (
+                <MenuItem key={language.id} value={language.id}>
+                  {language.name}
+                </MenuItem>
+            ))}
+          </CustomTextField>
         </div>
-        <Button variant="outlined" disabled={!isEditorReady} onClick={handleApply}>>Apply</Button>
-      </div>
-    </MyPaper>
+
+        <div>
+          <Typography className={classes.title} variant="h6">Themes</Typography>
+          <CustomTextField
+              select
+              variant="filled"
+              value={monacoTheme}
+              onChange={handleThemeChange}
+              className="full-width"
+              label="Theme"
+          >
+            {config.defaultThemes.map(theme => (
+                <MenuItem key={theme} value={theme}>
+                  {theme}
+                </MenuItem>
+            ))}
+            <MenuItem disabled><Divider/></MenuItem>
+            {Object.entries(monacoThemes).map(([themeId, themeName]) => (
+                <MenuItem key={themeId} value={themeId}>
+                  {themeName}
+                </MenuItem>
+            ))}
+          </CustomTextField>
+        </div>
+
+        <div>
+          <Typography className={classes.title} variant="h6">Advanced Setup Options</Typography>
+
+
+          <div className={classes.editor}>
+            <Editor
+                theme={monacoTheme}
+                language="json"
+                height={400}
+                value={JSON.stringify(options, null, 2)}
+                onMount={handleEditorDidMount}
+            />
+          </div>
+          <Button variant="outlined" disabled={!isEditorReady} onClick={handleApply}>>Apply</Button>
+        </div>
+      </MyPaper>
   );
 };
 

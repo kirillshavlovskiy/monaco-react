@@ -61,9 +61,28 @@ const setThemeBackground = ({ state }, color) => {
 const setFontColor = ({ state }, color) => {
   state.fontColor = color;
 };
+const setNewCode = ({state}, code) => {  // <-- Add setNewCode action for updating newCode in stat
+  state.newCode = code;
+};
+function executeCode (code) {
+ // we are provided with code value
+  const inputData = { message: { code: code, input_values: null } }; // Prepare the request payload
+
+  fetch("http://localhost:8000/courses/api/message/", {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(inputData),
+  })
+      .then(response => response.json())
+      .then(data => console.log(data.message)); // Log the response message from Django
+}
 
 export {
+  executeCode,
   hideNotification,
+  setNewCode,
   setThemeMode,
   setEditorMode,
   setIsEditorReady,

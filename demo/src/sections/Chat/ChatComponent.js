@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-//import ReactMarkdown from 'react-markdown';
+
 function ChatComponent() {
     const [log, setLog] = useState([]);
     const [message, setMessage] = useState("");
@@ -29,6 +29,8 @@ function ChatComponent() {
         webSocket.current.onclose = (event) => {
             console.log("WebSocket closed connection:", event);
         };
+
+        
 
         return () => {
             webSocket.current.close();

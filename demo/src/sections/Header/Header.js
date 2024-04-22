@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import MenuIcon from '@mui/icons-material/Menu';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
 
 import classNames from 'classnames';
 import Notifications from 'notifications';
@@ -9,9 +9,9 @@ import { useStore } from 'store';
 import { isMobile } from 'utils';
 import config from 'config';
 import useStyles from './useStyles';
-import SettingsIcon from '@material-ui/icons/Settings';
 import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
 import {styled, useTheme} from "@mui/material/styles";
+import { List, ListItem, ListItemIcon, ListItemText, Tooltip } from '@mui/material';
 import MuiAppBar from "@mui/material/AppBar";
 import MuiDrawer from "@mui/material/Drawer";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -23,10 +23,13 @@ import Box from "@mui/material/Box";
 import Content from 'sections/Content';
 import Editor from 'sections/Editor';
 import Settings from 'sections/Settings';
-import Paper from "@material-ui/core/Paper";
+import Paper from "@mui/material/Paper";
 import SideBar from "../SideBar";
 import { MuiThemeProvider} from 'theme';
 import { Modal, Button } from '@mui/material';
+import SettingsIcon from '@mui/icons-material/Settings';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
 
 const drawerWidth = 200;
 
@@ -35,7 +38,7 @@ const MainPaper = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.background.paper,
     color: theme.palette.text.primary,
     height: '94vh',
-    width: '92vw',
+    width: '92.5vw',
     marginRight: -5,  // add right margin
 }));
 
@@ -137,6 +140,8 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 
 export default function Header_SideBar() {
     const theme = useTheme();
+    const classes = useStyles();
+    const { state, actions } = useStore();
     const [open, setOpen] = React.useState(false);
     const [openSettingsModal, setOpenSettingsModal] = useState(false);
     const handleDrawerOpen = () => {
@@ -164,7 +169,7 @@ export default function Header_SideBar() {
     } = useStore();
 
     const [settingsRotate, setSettingsRotate] = useState(false);
-    const classes = useStyles();
+
     useEffect(() => {
     console.log(isSettingsVisible);
     }, [isSettingsVisible]);
@@ -199,26 +204,17 @@ export default function Header_SideBar() {
                             BrainPower>AI
                         </Typography>
                     )}
-                    <Button onClick={handleThemeSwitch}>
-
-                        <img
-                            className={classNames(classes.themeSwitcher, { [classes.rotate]: themeMode === 'dark' })}
-                            style={{ filter: themeMode === 'dark' ? 'invert(1)' : 'none' }}
-
-                            width="20"
-                            src={config.urls.themeModeIcon}
-                            alt="theme mode icon"
-                        />
-                    </Button>
-                    <Button onClick={handleOpenSettingsModal}>
-                        <SettingsIcon
-                            className={classNames(classes.settingsSwitcher, {[classes.rotate]: settingsRotate})}
-                            style={{
-                                filter: openSettingsModal ? 'none' : 'brightness(0.5)',
-                                color: theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.common.black
-                            }}
-                        />
-                    </Button>
+                    <Tooltip title="Change theme">
+                        <IconButton
+                            onClick={() => actions.setThemeMode(state.themeMode === 'light' ? 'dark' : 'light')}>
+                            {themeMode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Settings">
+                        <IconButton onClick={handleOpenSettingsModal}>
+                            <SettingsIcon />
+                        </IconButton>
+                    </Tooltip>
 
 
                 </Toolbar>
