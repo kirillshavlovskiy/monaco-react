@@ -3,7 +3,28 @@
     --background-color: #fff; /* Default value */
     --theme-color: #fff; /* Default value */
 }
+.outgoing {
 
+    margin-left: 20px;
+    margin-top: 5px;
+    display: flex;
+    justify-content: flex-end;
+    text-align: left;
+    background-color: #EDECE4;
+    border-radius: 5px;
+    padding: 10px;
+    display: inline-block;
+}
+
+.incoming {
+    margin-right: 20px;
+    margin-top: 2.5px;
+    color: #EDECE4;
+    background-color: #2B2B2B;
+    border-radius: 5px;
+    padding: 10px;
+    display: inline-block;
+}
 
 @media (prefers-reduced-motion: no-preference) {
     a:nth-of-type(2) .logo {

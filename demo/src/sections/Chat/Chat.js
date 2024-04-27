@@ -1,15 +1,14 @@
 import './styles.css';
-import React, {useState, useRef, useEffect} from 'react';
+import React, {createContext, useContext, useState, useRef, useEffect} from 'react';
 import '@chatscope/chat-ui-kit-styles/dist/default/styles.min.css';
 import { MainContainer, ChatContainer, MessageList, Message, MessageInput, TypingIndicator } from '@chatscope/chat-ui-kit-react';
 import {useStore} from "../../store";
 import {useTheme} from "@mui/material/styles";
 import useStyles from "../Editor/useStyles";
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { atelierSulphurpoolLight } from 'react-syntax-highlighter/dist/esm/styles/hljs';
-import { solarizedlight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import copy from 'copy-to-clipboard';
-import { github } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { githubGist } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { darcula } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import { vs2015 } from 'react-syntax-highlighter/dist/esm/styles/hljs'; // Import the style
 import Button from '@mui/material/Button';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
@@ -17,12 +16,16 @@ import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
 import IconButton from "@mui/material/IconButton";
 import SettingsIcon from "@mui/icons-material/Settings";
 import {Tooltip} from "@mui/material";
-
+import ReactMarkdown from 'react-markdown';
+import gfm from 'remark-gfm'; // Include this for GitHub Flavored Markdown
+import rehypeRaw from 'rehype-raw'; // Include this to allow raw HTM
+import { MessageBox } from 'react-chat-elements';
 
 
 
 const pythonContentRegex = /(?<=```python\n)[\s\S]+(?=\n```)/gm;
 const pythonCodeRegex = /(?:\s*)(?:(?:\bprint\s*\(.*?\)\s*)|(?:\bfor.*?:\s*print.*?))/g;
+
 
 
 function Chat() {
@@ -74,12 +77,27 @@ function Chat() {
         setSelectedLanguageId(37);
         setNewCode(snippet); // Update the newCode variable with the snippet value
     };
-    const renderMessage = (message) => {
+    const MessageBoxWrapper = ({ message, className }) => {
+        // Choose the right class based on the direction of message
+        const messageClass = message.direction === 'outgoing' ? 'outgoing' : 'incoming';
 
-            return <div>{message.message}</div>; // Render incoming message as plain text
-
+        if (message.direction === 'outgoing') {
+            // Apply CSS classes using a template literal
+            return <div className={`message-box ${messageClass} ${className}`}>
+                <ReactMarkdown
+                    children={message.message}
+                    //remarkPlugins={[gfm]}
+                    //rehypePlugins={[rehypeRaw]}
+                    components={customRenderer}
+                >{message.message}</ReactMarkdown>
+                </div>;
+        } else {
+            // Apply CSS classes using a template literal
+            return <div className={`message-box ${messageClass} ${className}`}>
+                <ReactMarkdown>{message.message}</ReactMarkdown>
+            </div>;
+        }
     };
-
     useEffect(() => {
         webSocket.current = new WebSocket("ws://localhost:8000/ws/livechat_autogen/");
         webSocket.current.onopen = () => console.log("WebSocket open");
@@ -88,14 +106,44 @@ function Chat() {
             try {
                 const data = JSON.parse(event.data);
                 const incomingMessage = data.message;
-                const incomingMatches = Array.from(incomingMessage.matchAll(pythonContentRegex));
-                const isPythonCode = incomingMatches.length > 0;
-                setMessages(messages => [...messages,
-                    {message: isPythonCode ? incomingMatches.map(match => match[0]).join('\n') : incomingMessage, direction: 'incoming', sender: 'Server', isPythonCode: isPythonCode}
-                ]);
+                const codeBlocks = extractCodeBlocks(incomingMessage);
+                const textBlocks = splitTextAndCode(incomingMessage, codeBlocks);
+                const newMessages = [];
+
+                textBlocks.forEach((block, index) => {
+                    if (block.isCode) {
+                        newMessages.push({
+                            message: block.content,
+                            direction: 'incoming',
+                            sender: 'Server',
+                            isPythonCode: block.language === 'python',
+                            language: block.language
+                        });
+                    } else {
+                        newMessages.push({
+                            message: block.content,
+                            direction: 'incoming',
+                            sender: 'Server',
+                            isPythonCode: false
+                        });
+                    }
+
+                    // Add a text message after each code block, if there is a following text block
+                    if (index < textBlocks.length - 1 && !textBlocks[index + 1].isCode) {
+                        newMessages.push({
+                            message: textBlocks[index + 1].content,
+                            direction: 'incoming',
+                            sender: 'Server',
+                            isPythonCode: false
+                        });
+                    }
+                });
+
+                setMessages(messages => [...messages, ...newMessages]);
                 setIsTyping(!incomingMessage.includes('to: Admin'));
+            } catch (error) {
+                console.error("Error parsing server response: ", error);
             }
-            catch (error) { console.error("Error parsing server response: ", error); }
         };
 
         webSocket.current.onerror = (event) => console.error("WebSocket error observed:", event);
@@ -103,6 +151,53 @@ function Chat() {
 
         return () => webSocket.current.close();
     }, []);
+
+// Helper function to extract code blocks and their languages
+    function extractCodeBlocks(text) {
+        const codeBlockRegex = /```(.*?)```/gs;
+        const matches = text.match(codeBlockRegex);
+        return matches ? matches.map(match => {
+            const lines = match.split('\n');
+            const language = lines[0].slice(3); // Remove the `` ` and get the language
+            const code = lines.slice(1, -1).join('\n'); // Join the code lines
+            return { language, code };
+        }) : [];
+    }
+
+// Helper function to split text and code blocks
+    function splitTextAndCode(text, codeBlocks) {
+        let parts = text.split(/```[\s\S]*?```/gs); // Split by code blocks
+        let blocks = parts.reduce((acc, part, index) => {
+            if (index % 2 === 0) {
+                // Text block
+                acc.push({ content: part, isCode: false });
+            } else {
+                // Code block
+                const language = codeBlocks[Math.floor(index / 2)].language;
+                acc.push({ content: codeBlocks[Math.floor(index / 2)].code, isCode: true, language });
+            }
+            return acc;
+        }, []);
+
+        // Ensure we start and end with a text block
+        if (blocks[0].isCode) {
+            blocks.unshift({ content: '', isCode: false });
+        }
+        if (blocks[blocks.length - 1].isCode) {
+            blocks.push({ content: '', isCode: false });
+        }
+
+        return blocks;
+    }
+
+    const customRenderer = {
+        heading(props) {
+            const level = props.level;
+            const children = props.children;
+            return <h1 style={{ fontSize: `2rem - ${(level - 1) * 0.5}rem` }}>{children}</h1>;
+        },
+        // ... (other custom renderers if needed)
+    };
 
     useEffect(() => {
         if (chatRef.current) {
@@ -121,46 +216,49 @@ function Chat() {
                 <MainContainer>
                     <ChatContainer>
                         <MessageList
+                            style={{ display: 'flex', flexDirection: 'column' }}
                             scrollBehavior="smooth"
                             typingIndicator={isTyping ? <TypingIndicator content="Autogen is typing" /> : null}
                         >
+                            {messages.map((message, i) => (
+                                <div
+                                    key={i}
+                                    style={{
+                                        textAlign: message.direction === 'outgoing' ? 'right' : 'left',
+                                        alignSelf: message.direction === 'outgoing' ? 'flex-end' : 'flex-start',
+                                    }}
+                                >
+                                    {message.isPythonCode ? (
+                                        <div style={{ backgroundColor: '#2B2B2B', borderRadius: '5px', padding: '5px', marginTop: '2.5px',  }}>
 
-                            {messages.map((message, i) => {
-                                return (
-                                    <div key={i}>
-                                        {message.isPythonCode ? (
-                                            <div style={{ backgroundColor: '#1E1E1E', borderRight: '1px', borderRadius: '5px'}}>
-                                                <div style={{ display: 'flex', justifyContent: 'flex-end'}}>
-                                                    <Tooltip title="Copy">
-                                                        <IconButton
-                                                            style={{ color: "#EDECE4" }}
-                                                            size="small"
-                                                            onClick={() => copy(message.message)}>
-                                                            <ContentCopyRoundedIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                    <Tooltip title="Execute Code">
-                                                        <IconButton
-                                                            style={{ color: "#EDECE4" }}
-                                                            size="small"
-                                                            onClick={() => runNewCode(message.message)}>
-                                                            <PlayArrowRoundedIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </div>
-                                                <SyntaxHighlighter language="python" style={vs2015} customStyle={{fontSize: '12px'}}>
-                                                    {message.message}
-                                                </SyntaxHighlighter>
+                                                <Tooltip title="Copy">
+                                                    <IconButton
+                                                        style={{ color: "#EDECE4" }}
+                                                        size="small"
+                                                        onClick={() => copy(message.message)}
+                                                    >
+                                                        <ContentCopyRoundedIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="Execute Code">
+                                                    <IconButton
+                                                        style={{ color: "#EDECE4" }}
+                                                        size="small"
+                                                        onClick={() => runNewCode(message.message)}
+                                                    >
+                                                        <PlayArrowRoundedIcon />
+                                                    </IconButton>
+                                                </Tooltip>
 
-                                            </div>
-                                        ) : (
-                                            <div>
-                                                {renderMessage(message)}
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
+                                            <SyntaxHighlighter language="python" style={darcula} customStyle={{ fontSize: '12px' }}>
+                                                {message.message}
+                                            </SyntaxHighlighter>
+                                        </div>
+                                    ) : (
+                                        <MessageBoxWrapper style={{ margin: '10px 0' }} message={message} />
+                                    )}
+                                </div>
+                            ))}
                         </MessageList>
                         {isTyping && <TypingIndicator content="Server is typing..." />}
                         <MessageInput placeholder="Type message here" onSend={(value) => sendMessage(value)}/>

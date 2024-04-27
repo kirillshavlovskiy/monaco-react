@@ -953,69 +953,45 @@ const examples = {
             p Get on it!
   `),
   37: rTabs(`
-# filename: streamlit_script.py
-import streamlit as st
-import matplotlib.pyplot as plt
 import numpy as np
-from sympy import symbols, lambdify
-from sympy.parsing.sympy_parser import parse_expr
-from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+import argparse
 
-# Define the symbols used in the formula
-x, y, z = symbols('x y z')
+# Define function for lognormal distribution
+def lognormal_distribution(mu, sigma, size):
+        return np.random.lognormal(mu, sigma, size)
 
-# Sidebar for input
-st.sidebar.header("Input your formula and parameters")
-formula_str = st.sidebar.text_area("Enter the formula (in terms of x, y, z):", value='x**2 + y**2')
-min_range = st.sidebar.number_input("Enter the minimum value for x and y:", value=-10.0)
-max_range = st.sidebar.number_input("Enter the maximum value for x and y:", value=10.0)
-scale = st.sidebar.number_input("Enter the number of points to plot:", value=100, step=1, format='%d')
+# Create the ArgumentParser object
+parser = argparse.ArgumentParser(description='Generate and save a lognormal distribution plot.')
 
-# Hints and examples
-st.sidebar.info("Valid functions include operations and functions like +, -, *, /, sin, cos, exp, etc.")
-st.sidebar.info("Example for 2D plot: x**2")
-st.sidebar.info("Example for 3D plot: x**2 + y**2")
+# Add the --plot-path argument
+parser.add_argument('--plot-path', type=str, help='Path to save the plot image.')
 
-# Main area for plot and button
-if st.button("Plot"):
-    try:
-        expr = parse_expr(formula_str, transformations='all')
-    except Exception as e:
-        st.error(f"Invalid formula. Error: {e}")
-    else:
-        # Check if the expression contains the symbols x, y, or z
-        if expr.has(x, y, z):
-            # Create a 3D plot
-            fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
-            x_vals = np.linspace(min_range, max_range, scale)
-            y_vals = np.linspace(min_range, max_range, scale)
-            x_vals, y_vals = np.meshgrid(x_vals, y_vals)
-            z_vals = lambdify((x, y), expr, "numpy")
-            ax.plot_surface(x_vals, y_vals, z_vals(x_vals, y_vals))
-            ax.set_xlabel('x')
-            ax.set_ylabel('y')
-            ax.set_zlabel('z')
-        elif expr.has(x, y):
-            # Create a 2D plot with x and y
-            x_vals = np.linspace(min_range, max_range, scale)
-            y_vals = lambdify(x, expr, "numpy")
-            plt.plot(x_vals, y_vals(x_vals))
-            plt.xlabel('x')
-            plt.ylabel('y')
-        elif expr.has(x):
-            # Create a 1D plot with x
-            x_vals = np.linspace(min_range, max_range, scale)
-            y_vals = lambdify(x, expr, "numpy")
-            plt.plot(x_vals, y_vals(x_vals))
-            plt.xlabel('x')
-            plt.ylabel('y')
-        else:
-            st.error("Invalid formula. The formula must contain at least one of the variables x, y, or z.")
+# Parse the command-line arguments
+args = parser.parse_args()
 
-        # Display the plot
-        st.pyplot(fig)
+# Generate sample data
+mu = 1
+sigma = 0.5
+size = 1000
+sample = lognormal_distribution(mu, sigma, size)
 
+# Plot the data
+plt.hist(sample, bins=50, color='skyblue', edgecolor='black')
+plt.xlabel('Value')
+plt.ylabel('Frequency')
+plt.title('Lognormal Distribution Sample')
+plt.grid(axis='y', alpha=0.75)
+
+# Save the plot to the specified path
+if args.plot_path:
+        plt.savefig(args.plot_path)
+        #print(f"Plot saved to {args.plot_path}")
+else:
+        print("No plot path provided; plot will not be saved.")
+
+# Close the figure to release resources
+plt.close()
   `),
   38: rTabs(`
     # Program to convert decimal number into binary number using recursive function

@@ -11,6 +11,7 @@
     import Typography from "@material-ui/core/Typography";
     import Button from "@material-ui/core/Button";
     import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+    import HandymanRoundedIcon from '@mui/icons-material/HandymanRounded';
     import {MyPaper} from 'theme';
     import {styled, useTheme} from "@mui/material/styles";
     import Drawer from "@mui/material/Drawer";
@@ -19,15 +20,29 @@
     import Box from '@mui/material/Box';
     import axios from 'axios';
     import code from '../../config/code.py'
+    // Import ChatContext
+    import ChatContext from './ChatContext.js';
 
     const Editor = () => {
-        const theme=useTheme();
+        const theme = useTheme();
         const classes = useStyles();
+        const webSocket = useRef(null);
         //const [editorWidth, setEditorWidth] = useState('50%');
         const [isEditorReady, setIsEditorReady] = useState(false);
-        const { state: { editor: { selectedLanguageId, options }, monacoTheme, themeBackground, fontColor, newCode, isSettingsVisible, isSideBarVisible }, actions: setThemeBackground } = useStore();
-        const language = config.supportedLanguages.find(({ id }) => id === selectedLanguageId).name;
+        const {
+            state: {
+                editor: {selectedLanguageId, options},
+                monacoTheme,
+                themeBackground,
+                fontColor,
+                newCode,
+                isSettingsVisible,
+                isSideBarVisible
+            }, actions: setThemeBackground
+        } = useStore();
+        const language = config.supportedLanguages.find(({id}) => id === selectedLanguageId).name;
         const editorRef = useRef();
+        const [message, setMessage] = useState("");
         const [editorContent, setEditorContent] = useState(examples[selectedLanguageId] || '');
         const [value, setValue] = React.useState(0);
         const [fontClr, setFontClr] = useState(fontColor);
@@ -35,6 +50,7 @@
         const handleChange = (event, newValue) => {
             setValue(newValue);
         };
+
         function handleEditorWillMount(monaco) {
             monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
                 target: monaco.languages.typescript.ScriptTarget.Latest,
@@ -54,24 +70,11 @@
             return editorRef.current?.getValue();
         }
 
-        function handleRun() {
-            const code = getEditorValue(); // Assuming getEditorValue function gets the code from the editor
-            const inputData = { message: { code: code, input_values: null } }; // Prepare the request payload
 
-            fetch("http://localhost:8000/courses/api/message/", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(inputData),
-            })
-                .then(response => response.json())
-                .then(data => console.log(data.message)); // Log the response message from Django
-        }
         const StyledTabs = styled((props) => (
             <Tabs
                 {...props}
-                TabIndicatorProps={{ children: <span className="MuiTabs-indicatorSpan" /> }}
+                TabIndicatorProps={{children: <span className="MuiTabs-indicatorSpan"/>}}
             />
         ))({
             '& .MuiTabs-indicator': {
@@ -95,7 +98,7 @@
                         {props.label}
                     </Box>}
             />
-        ))(({ theme }) => ({
+        ))(({theme}) => ({
 
             '&.Mui-selected': {
                 color: fontClr,
@@ -126,6 +129,130 @@
                 editorRef.current.setValue(code);
             }
         }, [code]);
+
+        const [messages, setMessages] = useState([]);
+        const pythonContentRegex = /(?<=```python\n)[\s\S]+(?=\n```)/gm;
+        const pythonCodeRegex = /(?:\s*)(?:(?:\bprint\s*\(.*?\)\s*)|(?:\bfor.*?:\s*print.*?))/g;
+        const [isTyping, setIsTyping] = useState(false);
+        const sendMessage = async (rawMessage) => {
+            const message = stripHTMLTags(rawMessage);
+            const isPythonCode = message.match(pythonContentRegex) !== null;
+            const newMessage = {
+                message: isPythonCode ? message : message.replace(pythonCodeRegex, ""),
+                direction: 'outgoing',
+                sender: 'Server',
+                isPythonCode: isPythonCode
+            };
+            const newMessages = [...messages, newMessage];
+            setMessages(newMessages);
+            setIsTyping(!message.includes('to: Admin'));
+            if (webSocket.current.readyState === WebSocket.OPEN) {
+                webSocket.current.send(JSON.stringify({message: newMessage.message}));
+                setMessage("");
+            }
+            setMessages((prevMessages) => [...prevMessages, message]);
+        };
+
+        function stripHTMLTags(text) {
+            const tempElement = document.createElement('div');
+            tempElement.innerHTML = text;
+            const plainText = tempElement.textContent || tempElement.innerText || '';
+            return plainText;
+        }
+
+        async function handleRun() {
+            try {
+                const code = getEditorValue(); // Assuming getEditorValue function gets the code from the editor
+
+                const inputData = {message: {code: code, input_values: null}}; // Prepare the request payload
+
+                const response = await fetch("http://localhost:8000/courses/api/code_execute/", { // replace with your API endpoint
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(inputData),
+                });
+
+                const result = await response.json(); // Parse the returned JSON
+                const { completion, image, message, output, prompt_line_n } = result;
+                // Here we log the result to the console
+                console.log("Execution result:", result);
+
+
+            } catch (error) {
+                // And in case an error happens in our async function, we also log this error
+                console.error("Error in handleImprove function: ", error.message);
+            }
+    }
+
+        async function handleImprove() {
+            try {
+                const code = getEditorValue(); // Assuming getEditorValue function gets the code from the editor
+
+                const inputData = {message: {code: code, input_values: null}}; // Prepare the request payload
+
+                const response = await fetch("http://localhost:8000/courses/api/code_execute/", { // replace with your API endpoint
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(inputData),
+                });
+
+                const result = await response.json(); // Parse the returned JSON
+                const { completion, image, message, output, prompt_line_n } = result;
+                // Here we log the result to the console
+                console.log("Execution result:", result);
+
+                // Then we also send a message to the WebSocket, including the returned result
+                webSocket.current.send(JSON.stringify({ message: `Check my code below:\n${code}\n\n***Execution Result***:\n${output}\nPlease suggest improvements to fix errors and improve program's functionality` }));
+
+            } catch (error) {
+                // And in case an error happens in our async function, we also log this error
+                console.error("Error in handleImprove function: ", error.message);
+            }
+
+        }
+
+        function ChatProvider({ children }) {
+
+
+            const functionValue = {
+                messages,  // messages state
+                sendMessage,  // sendMessage function
+                handleRun,  // handleRun function
+                handleImprove,  // handleImprove function
+            };
+            return <ChatContext.Provider value={functionValue}>{children}</ChatContext.Provider>;
+        }
+        useEffect(() => {
+            webSocket.current = new WebSocket("ws://localhost:8000/ws/livechat_autogen/");
+            webSocket.current.onopen = () => console.log("WebSocket open");
+
+            webSocket.current.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    const incomingMessage = data.message;
+                    const incomingMatches = Array.from(incomingMessage.matchAll(pythonContentRegex));
+                    const isPythonCode = incomingMatches.length > 0;
+                    setMessages(messages => [...messages,
+                        {message: isPythonCode ? incomingMatches.map(match => match[0]).join('\n') : incomingMessage, direction: 'incoming', sender: 'Server', isPythonCode: isPythonCode}
+                    ]);
+                    setIsTyping(!incomingMessage.includes('to: Admin'));
+                }
+                catch (error) { console.error("Error parsing server response: ", error); }
+            };
+
+            webSocket.current.onerror = (event) => console.error("WebSocket error observed:", event);
+            webSocket.current.onclose = (event) => console.log("WebSocket closed connection:", event);
+
+            return () => webSocket.current.close();
+        }, []);
+
+
+
+
 
         return (
             <div className={classes.root} >
@@ -178,10 +305,19 @@
                     {value === 1 && (
                         <Interface />
                     )}
-                        <div className={classes.buttonContainer}>
+                    <div className={classes.buttonContainer}>
 
                         <div className={classes.spacer}/>
+                        <Button className={classes.execute_button}
+                                variant="contained"
+                                disabled={!isEditorReady}
+                                endIcon={<HandymanRoundedIcon/>}
+                                onClick={handleImprove}
 
+                        >
+                            FIX
+                        </Button>
+                        <div className={classes.spacer}/>
                         <Button className={classes.execute_button}
                                 variant="contained"
                                 disabled={!isEditorReady}
@@ -192,10 +328,10 @@
                             Run
                         </Button>
 
-                        </div>
+                    </div>
 
 
-                    </MyPaper>
+                </MyPaper>
                 </div>
                 <Console/>
 

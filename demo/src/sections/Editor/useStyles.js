@@ -59,11 +59,12 @@ import { makeStyles } from '@material-ui/core/styles';
     },
     buttonContainer: {
       display: 'flex',
-      justifyContent: 'space-between',
+      justifyContent: 'flex-end',
       marginRight: 0,
     },
     execute_button: {
       marginTop: 15,
+      marginLeft: 10,
       marginButtom: 0,
       backgroundColor: '#90CAF9',
     },
