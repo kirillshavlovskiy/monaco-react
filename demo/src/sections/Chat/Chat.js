@@ -14,17 +14,63 @@ import Button from '@mui/material/Button';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
 import IconButton from "@mui/material/IconButton";
-import SettingsIcon from "@mui/icons-material/Settings";
+import {TerminalIcon, CopyIcon, PlayIcon, TrashIcon} from '@primer/octicons-react'
 import {Tooltip} from "@mui/material";
 import ReactMarkdown from 'react-markdown';
 import gfm from 'remark-gfm'; // Include this for GitHub Flavored Markdown
-import rehypeRaw from 'rehype-raw'; // Include this to allow raw HTM
-import { MessageBox } from 'react-chat-elements';
+import rehypeRaw from 'rehype-raw';
+//import marked from 'marked';
+import Markdown from 'marked-react';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { FaCode } from 'react-icons/fa';
+import copyToClipboard from 'copy-to-clipboard';
+
+
+// Helper function to escape HTML special characters
 
 
 
-const pythonContentRegex = /(?<=```python\n)[\s\S]+(?=\n```)/gm;
-const pythonCodeRegex = /(?:\s*)(?:(?:\bprint\s*\(.*?\)\s*)|(?:\bfor.*?:\s*print.*?))/g;
+
+
+// Helper function to extract code blocks and their languages
+function extractCodeBlocks(text) {
+    const codeBlockRegex = /```(.*?)\n*([\s\S]+?)```/g;
+    const matches = text.match(codeBlockRegex);
+    return matches ? matches.map(match => {
+        const parts = match.split('\n');
+        const language = parts[0].slice(3); // Remove the `` ` and get the language
+        let code = parts.slice(parts[1] === '' ? 2 : 1, -1).join('\n'); // Adjust for optional empty line before the code
+        // Additional step to remove the trailing ```
+        code = code.replace(/```$/, "");
+        return { language, code };
+    }) : [];
+}
+
+function splitTextAndCode(text, codeBlocks) {
+    let index = 0;
+    let parts = text.split(/(```[\s\S]*?```)/gs); // Split by code blocks
+    let blocks = parts.reduce((acc, part, i) => {
+        if (i % 2 === 0) {
+            // Text block
+            acc.push({ content: part, isCode: false });
+        } else {
+            // Code block
+            const language = codeBlocks[index].language;
+            acc.push({ content: codeBlocks[index].code, isCode: true, language });
+            index++;
+        }
+        return acc;
+    }, []);
+
+    // Ensure we don't end with an empty text block
+    if (blocks[blocks.length - 1].isCode) {
+        blocks.push({ content: '', isCode: false });
+    }
+
+    return blocks;
+}
+
+
 
 
 
@@ -50,13 +96,12 @@ function Chat() {
     } = useStore();
     const [isTyping, setIsTyping] = useState(false);
     const sendMessage = async (rawMessage) => {
-        const message = stripHTMLTags(rawMessage);
-        const isPythonCode = message.match(pythonContentRegex) !== null;
+        const message = stripHTMLTagsButKeepWhitespace(rawMessage);
         const newMessage = {
-            message: isPythonCode ? message : message.replace(pythonCodeRegex, ""),
+            message: message,
             direction: 'outgoing',
             sender: 'Server',
-            isPythonCode: isPythonCode
+
         };
         const newMessages = [...messages, newMessage];
         setMessages(newMessages);
@@ -66,38 +111,176 @@ function Chat() {
             setMessage("");
         }
     };
-    function stripHTMLTags(text) {
-        const tempElement = document.createElement('div');
-        tempElement.innerHTML = text;
-        const plainText = tempElement.textContent || tempElement.innerText || '';
-        return plainText;
+
+    const languageIcons = {
+        python: 'Python',
+        javascript: 'JavaScript',
+        java: 'Java',
+        sh: 'Shell',
+        // ... add other languages and their corresponding icons or names
     }
+
+    const CodeSnippet = ({ language, code, direction }) => {
+        const languageName = languageIcons[language] || language;
+
+        const handleCopyClick = () => {
+            copyToClipboard(code);
+            // Optionally, show a notification that the code has been copied
+        };
+
+        const handleExecuteClick = () => {
+            // Implement the logic to execute the code snippet
+            runNewCode(code); // Assuming runNewCode is a function to execute the code
+        };
+
+        return (
+            <div style={{ backgroundColor: '#2B2B2B', borderRadius: '5px', marginTop: '2.5px', marginRight: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: direction === 'outgoing' ? 'flex-end' : 'flex-start', marginBottom: '2px' }}>
+                <span style={{ marginRight: 'auto', backgroundColor: '#fff', marginLeft: '10px', marginTop: '7.5px', padding: '2px 5px', borderRadius: '3px', fontSize: '0.8rem' }}>
+                  {languageName} {languageIcons[language] && <FaCode />} {/* Render the icon if available */}
+                </span>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                        <Tooltip title="Copy">
+                            <IconButton
+                                style={{ color: "#EDECE4" }}
+                                size="small"
+                                onClick={handleCopyClick}
+                            >
+                                <CopyIcon size={16} />
+                            </IconButton>
+                        </Tooltip>
+                        {language === 'python' && (
+                            <Tooltip title="Add to terminal">
+                                <IconButton
+                                    style={{ color: "#EDECE4" }}
+                                    size="small"
+                                    onClick={handleExecuteClick}
+                                >
+                                    <TerminalIcon size={16} />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                        {language === 'python' && (
+                            <Tooltip title="Execute">
+                                <IconButton
+                                    style={{ color: "#EDECE4" }}
+                                    size="small"
+                                    onClick={handleExecuteClick}
+                                >
+                                    <PlayIcon size={16} />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                        <Tooltip title="Delete">
+                            <IconButton
+                                style={{ color: "#EDECE4" }}
+                                size="small"
+                                onClick={handleCopyClick}
+                            >
+                                <TrashIcon size={16} />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Copy">
+                            <IconButton
+                                style={{ color: "#EDECE4" }}
+                                size="small"
+                                onClick={handleCopyClick}
+                            >
+                                <CopyIcon size={16} />
+                            </IconButton>
+                        </Tooltip>
+                    </div>
+                </div>
+                <SyntaxHighlighter language={language} style={darcula} customStyle={{ fontSize: '12px', borderRadius: '5px', marginTop: '0px', padding: '10px', marginBottom: '0px' }}>
+                    {code}
+                </SyntaxHighlighter>
+            </div>
+        );
+    };
+    function stripHTMLTagsButKeepWhitespace(text) {
+        const tempElement = document.createElement('div');
+        tempElement.innerHTML = text.replace(/</g, '&lt;').replace(/>/g, '&gt;'); // Replace angle brackets to prevent HTML parsing
+        const plainText = tempElement.textContent || tempElement.innerText || '';
+        return plainText.replace(/&lt;/g, '<').replace(/&gt;/g, '>'); // Convert back to angle brackets
+    }
+
+    const MyMarkdownComponent = ({ markdownText }) => {
+        return (
+            <ReactMarkdown
+                remarkPlugins={[gfm]}
+                rehypePlugins={[rehypeRaw]}
+                components={{
+                    code({ node, inline, className, children, ...props }) {
+                        const match = /language-(\w+)/.exec(className || '');
+                        return !inline && match ? (
+                            <SyntaxHighlighter
+                                {...props}
+                                children={String(children).trim()}
+                                style={darcula}
+                                language={match[1]}
+                                PreTag="div"
+                            />
+                        ) : (
+                            <code {...props} className={className}>
+                                {children}
+                            </code>
+                        );
+                    },
+                }}
+            >
+                {markdownText}
+            </ReactMarkdown>
+        );
+    };
 
     const runNewCode = (snippet) => {
         setSelectedLanguageId(37);
         setNewCode(snippet); // Update the newCode variable with the snippet value
     };
+
     const MessageBoxWrapper = ({ message, className }) => {
-        // Choose the right class based on the direction of message
         const messageClass = message.direction === 'outgoing' ? 'outgoing' : 'incoming';
 
-        if (message.direction === 'outgoing') {
-            // Apply CSS classes using a template literal
-            return <div className={`message-box ${messageClass} ${className}`}>
-                <ReactMarkdown
-                    children={message.message}
-                    //remarkPlugins={[gfm]}
-                    //rehypePlugins={[rehypeRaw]}
-                    components={customRenderer}
-                >{message.message}</ReactMarkdown>
-                </div>;
-        } else {
-            // Apply CSS classes using a template literal
-            return <div className={`message-box ${messageClass} ${className}`}>
-                <ReactMarkdown>{message.message}</ReactMarkdown>
-            </div>;
-        }
+        return (
+            <div className={`message-box ${messageClass} ${className}`}
+                 style={{paddingLeft: '10px'}}
+            >
+
+                    <MyMarkdownComponent markdownText={message.message} />
+
+            </div>
+        );
     };
+
+    const renderMessageBlock = (block, direction) => {
+        if (block.type === "text") {
+            return  <MyMarkdownComponent markdownText={block.content} />
+        } else if (block.type === "code") {
+            return (
+                <CodeSnippet
+                    key={block.content}
+                    language={block.language}
+                    code={block.content}
+                    direction={direction}
+                />
+            );
+        }
+        return null;
+    };
+
+    const MessageWithBlocks = ({ message, direction }) => {
+        return (
+            <div style={{ textAlign: direction }}>
+                {message.blocks.map((block, index) => (
+                    <React.Fragment key={index}>
+                        {renderMessageBlock(block, direction)}
+                    </React.Fragment>
+                ))}
+            </div>
+        );
+    };
+
+
     useEffect(() => {
         webSocket.current = new WebSocket("ws://localhost:8000/ws/livechat_autogen/");
         webSocket.current.onopen = () => console.log("WebSocket open");
@@ -105,46 +288,46 @@ function Chat() {
         webSocket.current.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
-                const incomingMessage = data.message;
+
+                if (data.message.sender === "Admin") {
+                    return; // Do not process this message
+                }
+                if (data.message.sender === "Coder") {
+
+                }
+                const incomingMessage = data.message.text;
+                console.log("Incoming message data:", data.message.sender);
                 const codeBlocks = extractCodeBlocks(incomingMessage);
                 const textBlocks = splitTextAndCode(incomingMessage, codeBlocks);
-                const newMessages = [];
-
-                textBlocks.forEach((block, index) => {
+                const newMessages = textBlocks.map((block, index) => {
                     if (block.isCode) {
-                        newMessages.push({
+                        return {
                             message: block.content,
                             direction: 'incoming',
-                            sender: 'Server',
-                            isPythonCode: block.language === 'python',
+                            sender: data.message.sender,
                             language: block.language
-                        });
+                        };
                     } else {
-                        newMessages.push({
-                            message: block.content,
-                            direction: 'incoming',
-                            sender: 'Server',
-                            isPythonCode: false
-                        });
+                        // Ensure there's text to display
+                        if (block.content.trim() !== '') {
+                            return {
+                                message: block.content.trim(),
+                                direction: 'incoming',
+                                sender: data.message.sender,
+                                isPythonCode: false
+                            };
+                        }
                     }
-
-                    // Add a text message after each code block, if there is a following text block
-                    if (index < textBlocks.length - 1 && !textBlocks[index + 1].isCode) {
-                        newMessages.push({
-                            message: textBlocks[index + 1].content,
-                            direction: 'incoming',
-                            sender: 'Server',
-                            isPythonCode: false
-                        });
-                    }
-                });
+                }).filter(Boolean); // Filter out any falsy values (like empty strings)
 
                 setMessages(messages => [...messages, ...newMessages]);
-                setIsTyping(!incomingMessage.includes('to: Admin'));
+                setIsTyping(false);
             } catch (error) {
                 console.error("Error parsing server response: ", error);
             }
         };
+
+
 
         webSocket.current.onerror = (event) => console.error("WebSocket error observed:", event);
         webSocket.current.onclose = (event) => console.log("WebSocket closed connection:", event);
@@ -152,49 +335,11 @@ function Chat() {
         return () => webSocket.current.close();
     }, []);
 
-// Helper function to extract code blocks and their languages
-    function extractCodeBlocks(text) {
-        const codeBlockRegex = /```(.*?)```/gs;
-        const matches = text.match(codeBlockRegex);
-        return matches ? matches.map(match => {
-            const lines = match.split('\n');
-            const language = lines[0].slice(3); // Remove the `` ` and get the language
-            const code = lines.slice(1, -1).join('\n'); // Join the code lines
-            return { language, code };
-        }) : [];
-    }
-
-// Helper function to split text and code blocks
-    function splitTextAndCode(text, codeBlocks) {
-        let parts = text.split(/```[\s\S]*?```/gs); // Split by code blocks
-        let blocks = parts.reduce((acc, part, index) => {
-            if (index % 2 === 0) {
-                // Text block
-                acc.push({ content: part, isCode: false });
-            } else {
-                // Code block
-                const language = codeBlocks[Math.floor(index / 2)].language;
-                acc.push({ content: codeBlocks[Math.floor(index / 2)].code, isCode: true, language });
-            }
-            return acc;
-        }, []);
-
-        // Ensure we start and end with a text block
-        if (blocks[0].isCode) {
-            blocks.unshift({ content: '', isCode: false });
-        }
-        if (blocks[blocks.length - 1].isCode) {
-            blocks.push({ content: '', isCode: false });
-        }
-
-        return blocks;
-    }
-
     const customRenderer = {
         heading(props) {
             const level = props.level;
             const children = props.children;
-            return <h1 style={{ fontSize: `2rem - ${(level - 1) * 0.5}rem` }}>{children}</h1>;
+            return <h1 style={{ fontSize: `5rem - ${(level - 1) * 0.5}rem` }}>{children}</h1>;
         },
         // ... (other custom renderers if needed)
     };
@@ -210,6 +355,7 @@ function Chat() {
         } else { console.error('chatRef.current is not defined'); }
     }, [themeBackground, theme]);
     console.log(fontColor);
+
     return (
         <div ref={chatRef} className="chat-container">
             <div style={{height: "76.5vh", width: "44.5vw"}}>
@@ -228,35 +374,9 @@ function Chat() {
                                         alignSelf: message.direction === 'outgoing' ? 'flex-end' : 'flex-start',
                                     }}
                                 >
-                                    {message.isPythonCode ? (
-                                        <div style={{ backgroundColor: '#2B2B2B', borderRadius: '5px', padding: '5px', marginTop: '2.5px',  }}>
 
-                                                <Tooltip title="Copy">
-                                                    <IconButton
-                                                        style={{ color: "#EDECE4" }}
-                                                        size="small"
-                                                        onClick={() => copy(message.message)}
-                                                    >
-                                                        <ContentCopyRoundedIcon />
-                                                    </IconButton>
-                                                </Tooltip>
-                                                <Tooltip title="Execute Code">
-                                                    <IconButton
-                                                        style={{ color: "#EDECE4" }}
-                                                        size="small"
-                                                        onClick={() => runNewCode(message.message)}
-                                                    >
-                                                        <PlayArrowRoundedIcon />
-                                                    </IconButton>
-                                                </Tooltip>
+                                        <MessageWithBlocks key={i} message={message} direction={message.direction} />
 
-                                            <SyntaxHighlighter language="python" style={darcula} customStyle={{ fontSize: '12px' }}>
-                                                {message.message}
-                                            </SyntaxHighlighter>
-                                        </div>
-                                    ) : (
-                                        <MessageBoxWrapper style={{ margin: '10px 0' }} message={message} />
-                                    )}
                                 </div>
                             ))}
                         </MessageList>
