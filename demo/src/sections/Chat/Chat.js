@@ -374,9 +374,17 @@ function Chat() {
                                         alignSelf: message.direction === 'outgoing' ? 'flex-end' : 'flex-start',
                                     }}
                                 >
-
-                                        <MessageWithBlocks key={i} message={message} direction={message.direction} />
-
+                                    {message.language && (
+                                        <CodeSnippet
+                                            language={message.language || 'text' }
+                                            code={message.message}
+                                            direction={message.direction}
+                                            onExecute={runNewCode} // Pass the execute handler as a prop
+                                        />
+                                    )}
+                                    {!message.language && (
+                                        <MessageBoxWrapper  message={message} />
+                                    )}
                                 </div>
                             ))}
                         </MessageList>
