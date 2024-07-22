@@ -1,6 +1,6 @@
 import { makeStyles } from '@material-ui/core/styles';
 const drawerTopMargin = "64px";
-
+const drawerWidth = 200;
 const useStyles = makeStyles(theme => ({
   root: {
   },
@@ -8,12 +8,12 @@ const useStyles = makeStyles(theme => ({
   flexGrow: 1,
   fontWeight: 400,
   fontSize: 36,
-  marginLeft: 25,
+
   },
   logo: {
   marginRight: theme.spacing(1),
   fontWeight: 700,
-  fontSize: 36,
+  fontSize: 48,
   padding: 2,
   },
   themeSwitcher: {
@@ -53,6 +53,19 @@ const useStyles = makeStyles(theme => ({
     marginTop: drawerTopMargin,
     width: 250, // adjust this to your needs
     flexShrink: 0,
+  },
+  mainContainer: {
+    position: 'relative', // Establishing a positioning context for absolutely positioned children
+    height: '100vh', // Adjust based on your layout requirements
+    overflow: 'hidden', // Prevents scrolling within the container
+  },
+  mainContent: {
+    position: 'absolute',
+    top: 50, // Height of your toolbar
+    bottom: 0,
+    left: drawerWidth, // Width of your sidebar
+    right: 0,
+    overflow: 'auto', // Enable scrolling within the content area only
   }
 }));
 

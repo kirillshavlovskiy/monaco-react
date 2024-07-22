@@ -20,6 +20,7 @@
     "classnames": "^2.2.6",
     "copy-to-clipboard": "^3.3.3",
     "hast-util-to-jsx-runtime": "^2.3.0",
+    "html-to-text": "^9.0.5",
     "legacy": "^0.0.3",
     "marked": "^9.1.6",
     "marked-react": "1.4.0",

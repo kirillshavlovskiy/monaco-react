@@ -2,6 +2,7 @@
     import MonacoEditor from '@monaco-editor/react';
     import Settings from 'sections/Settings';
     import Interface from './Interface/Interface';
+    import FileSystem from 'sections/FileSystem';
     import Console from 'sections/Console';
     import { useStore } from 'store';
     import { isMobile } from 'utils';
@@ -23,6 +24,8 @@
     // Import ChatContext
     import ChatContext from './ChatContext.js';
 
+
+
     const Editor = () => {
         const theme = useTheme();
         const classes = useStyles();
@@ -38,7 +41,7 @@
                 newCode,
                 isSettingsVisible,
                 isSideBarVisible
-            }, actions: setThemeBackground
+            }, actions: {setNewCode}
         } = useStore();
         const language = config.supportedLanguages.find(({id}) => id === selectedLanguageId).name;
         const editorRef = useRef();
@@ -46,9 +49,10 @@
         const [editorContent, setEditorContent] = useState(examples[selectedLanguageId] || '');
         const [value, setValue] = React.useState(0);
         const [fontClr, setFontClr] = useState(fontColor);
-        const [code, setCode] = useState(newCode);
+
         const handleChange = (event, newValue) => {
             setValue(newValue);
+
         };
 
         function handleEditorWillMount(monaco) {
@@ -64,8 +68,8 @@
             editorRef.current = editor; // Assign editor instance
             //editorRef.current.layout(); // Force editor's layout adjustfunction handleEditorDidMount(editor, monaco) {
             setIsEditorReady(true);
+            setNewCode(editorRef.current?.getValue());
         }
-
         function getEditorValue() {
             return editorRef.current?.getValue();
         }
@@ -84,7 +88,7 @@
             },
             '& .MuiTabs-indicatorSpan': {
                 maxWidth: 100,
-                width: '90%',
+                width: '100%',
                 backgroundColor: fontClr,
             },
         });
@@ -121,7 +125,7 @@
         useEffect(() => {
             if (editorRef.current && newCode !== editorRef.current.getValue()) {
                 editorRef.current.setValue(newCode);
-            }
+                }
         }, [newCode]);
 
         useEffect(() => {
@@ -138,10 +142,10 @@
             const message = stripHTMLTags(rawMessage);
             const isPythonCode = message.match(pythonContentRegex) !== null;
             const newMessage = {
-                message: isPythonCode ? message : message.replace(pythonCodeRegex, ""),
+                message: message,
                 direction: 'outgoing',
-                sender: 'Server',
-                isPythonCode: isPythonCode
+                sender: 'Admin',
+
             };
             const newMessages = [...messages, newMessage];
             setMessages(newMessages);
@@ -250,6 +254,11 @@
             return () => webSocket.current.close();
         }, []);
 
+        const handleEditorChange = (newValue) => {
+            setNewCode(newValue);
+            setEditorContent(newValue);  // Update context with new content
+            console.log('updated code:', newValue);
+        };
 
 
 
@@ -281,7 +290,7 @@
                     >
                         <StyledTab className={classes.tab} label="Terminal" />
                         <StyledTab className={classes.tab} label="Interface" />
-                        <StyledTab className={classes.tab} label="Board" />
+                        <StyledTab className={classes.tab} label="File System" />
                         <StyledTab className={classes.tab} label="Data Space" />
                         <StyledTab className={classes.tab} label="Smart Notes" />
                     </StyledTabs>
@@ -299,11 +308,14 @@
                                 beforeMount={handleEditorWillMount}
                                 onMount={handleEditorDidMount}
 
-                                onChange={(newVal) => setEditorContent(newVal)}
+                                onChange={handleEditorChange}
                             />
                     )}
                     {value === 1 && (
                         <Interface />
+                    )}
+                    {value === 2 && (
+                        <FileSystem />
                     )}
                     <div className={classes.buttonContainer}>
 
@@ -333,10 +345,12 @@
 
                 </MyPaper>
                 </div>
-                <Console/>
+                <div className={classes.console}>
+                    <Console/>
+                </div>
 
 
-        </div>
+            </div>
         );
     }
 

@@ -3,6 +3,7 @@ import config from 'config';
 const initalTheme = 'dark';
 
 const initialState = {
+
   themeMode: initalTheme,
   isSettingsVisible: false,
   isSideBarVisible: true,

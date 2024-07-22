@@ -61,7 +61,7 @@ const setThemeBackground = ({ state }, color) => {
 const setFontColor = ({ state }, color) => {
   state.fontColor = color;
 };
-const setNewCode = ({state}, code) => {  // <-- Add setNewCode action for updating newCode in stat
+const setNewCode = ({state}, code) => {  // <-- Add setNewCode action for updating newCode in state
   state.newCode = code;
 };
 function executeCode (code) {

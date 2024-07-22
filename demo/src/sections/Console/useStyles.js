@@ -2,10 +2,8 @@ import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles(theme => ({
   root: {
-    flexGrow: 1,
     width: '100%',
     height: '100%',
-    display: 'flex',
     justifyContent: 'space-between',
     '& .MuiTab-root': {
       minWidth: 75,
@@ -28,13 +26,7 @@ const useStyles = makeStyles(theme => ({
       backgroundColor: 'white',
       height: '0.25rem',
     },
-    editor: {
-      marginBottom: 12,
-      marginTop: 20,
-      marginRight: 15,
-      paddingTop: -5,
 
-    },
   },
 
 }));

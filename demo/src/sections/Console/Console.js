@@ -12,6 +12,7 @@ import {MyPaper} from 'theme';
 import ReplyIcon from '@mui/icons-material/Reply';
 import { withStyles } from '@material-ui/core/styles';
 import Chat from "../Chat/Chat";
+import Editor_Agent from "../Editor";
 import ChatComponent from "../Chat/ChatComponent";
 import MonacoEditor from "@monaco-editor/react";
 import Tabs from "@material-ui/core/Tabs";
@@ -19,6 +20,7 @@ import Tab from "@material-ui/core/Tab";
 import Box from "@mui/material/Box";
 import ai_code from "../../config/ai";
 import Interface from "../Editor/Interface/Interface";
+import examples from "../../config/examples";
 
 const CustomDivider = withStyles((theme) => ({
     root: {
@@ -35,7 +37,7 @@ const Console = _ => {
     const [isEditorReady, setIsEditorReady] = useState(false);
     const {
         state: { editor: { selectedLanguageId, options }, monacoTheme },
-        actions: { editor: { setSelectedLanguageId, setOptions, setMonacoTheme }, showNotification },
+        actions: { editor: { setSelectedLanguageId, setOptions, setMonacoTheme }, showNotification, setNewCode},
         effects: { defineTheme, monacoThemes },
     } = useStore();
 
@@ -43,7 +45,7 @@ const Console = _ => {
     const theme = useTheme()
     const editorRef = useRef();
     const [consoleText, setConsoleText] = useState(''); // Store received messages from backend
-
+    const [editorContent, setEditorContent] = useState(ai_code || '');
     //const [editorWidth, setEditorWidth] = useState('50%');
 
     const { state: { editor: themeBackground, fontColor, isSettingsVisible, isSideBarVisible }, actions: setThemeBackground } = useStore();
@@ -69,8 +71,10 @@ const Console = _ => {
     }
 
     function handleEditorDidMount(editor, monaco) {
+        editorRef.current = editor; // Assign editor instance
+        //editorRef.current.layout(); // Force editor's layout adjustfunction handleEditorDidMount(editor, monaco) {
         setIsEditorReady(true);
-        editorRef.current = editor;
+        setNewCode(editorRef.current?.getValue());
     }
 
     const StyledTabs = styled((props) => (
@@ -119,54 +123,63 @@ const Console = _ => {
         setFontClr(fontColor);
     }, [fontColor]);
 
-        return (
-        <div className={classes.root}>
-            <MyPaper className={classes.editor}
-                     sx={{
-                         '& .Mui-paper': {
+    const handleEditorChange = (newValue) => {
+        setNewCode(newValue);
+        setEditorContent(newValue);  // Update context with new content
+        console.log('updated code:', newValue);
+    };
 
-                             bgcolor: theme.palette.mode === theme.palette.background.paper,
-                             color: fontClr,
-                             border: "1px solid #464646"
-                         }
-                     }}
+    return (
+    <div className={classes.root}>
+        <MyPaper className={classes.editor}
+                 sx={{
+                     '& .Mui-paper': {
+
+                         bgcolor: theme.palette.mode === theme.palette.background.paper,
+                         color: fontClr,
+                         border: "1px solid #464646"
+                     }
+                 }}
+        >
+            <StyledTabs
+                value={consoleValue}
+                onChange={handleChange}
+                aria-label="styled tabs example"
+                className={classes.tabsStyled}
+                style={{marginTop: "-20px", marginBottom: "15px", hight: "7.5px"}}
             >
-                <StyledTabs
-                    value={consoleValue}
-                    onChange={handleChange}
-                    aria-label="styled tabs example"
-                    className={classes.tabsStyled}
-                    style={{marginTop: "-20px", marginBottom: "15px", hight: "7.5px"}}
-                >
-                    <StyledTab className={classes.tab} label="Chat" />
-                    <StyledTab className={classes.tab} label="Agents" />
-                    <StyledTab className={classes.tab} label="Graph" />
+                <StyledTab className={classes.tab} label="Agent Console" />
+                <StyledTab className={classes.tab} label="Code" />
+                <StyledTab className={classes.tab} label="Visual Board" />
 
-                </StyledTabs>
+            </StyledTabs>
 
-                {consoleValue === 0 && (
-                    <Chat />
-                )}
-                {consoleValue === 1 && (
-                    <Editor
-                        key="monaco_editor"
-                        theme={monacoTheme}
-                        defaultLanguage={language}
-                        height="71vh"
-                        width="75vh"
+            {consoleValue === 0 && (
+                <Chat />
+            )}
+            {consoleValue === 1 && (
+                <MonacoEditor
+                key="monaco_editor"
+                theme={monacoTheme}
+                height="69.5vh"
+                width="75vh"
+                path={language}
+                defaultValue={editorContent}
+                defaultLanguage={language}
+                options={options}
+                beforeMount={handleEditorWillMount}
+                onMount={handleEditorDidMount}
 
-                        defaultvalue={newEditorContent}
-                        onMount={handleEditorDidMount}
-                        options={options}
-                    />
-                )}
-                {consoleValue === 2 && (
-                    <ChatComponent/>
-                )}
+                onChange={handleEditorChange}
+                />
+            )}
+            {consoleValue === 2 && (
+                <ChatComponent/>
+            )}
 
-            </MyPaper>
-        </div>
-        )
+        </MyPaper>
+    </div>
+    )
 
 };
 

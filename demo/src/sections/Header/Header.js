@@ -23,46 +23,45 @@ import Box from "@mui/material/Box";
 import Content from 'sections/Content';
 import Editor from 'sections/Editor';
 import Settings from 'sections/Settings';
+import FileSystem from 'sections/Settings';
 import Paper from "@mui/material/Paper";
 import SideBar from "../SideBar";
 import { MuiThemeProvider} from 'theme';
 import { Modal, Button } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
+import ArchiveIcon from '@mui/icons-material/Settings';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 
-const drawerWidth = 200;
+const drawerWidth = 250;
 
-
-const MainPaper = styled(Paper)(({ theme }) => ({
-    backgroundColor: theme.palette.background.paper,
-    color: theme.palette.text.primary,
-    height: '94vh',
-    width: '92.5vw',
-    marginRight: -5,  // add right margin
-}));
 
 const Main = styled('main', {
     shouldForwardProp: (prop) => prop !== 'open',
-})(
-    ({ theme, open }) => ({
-        flexGrow: 1,
-        padding: theme.spacing(3),
-        transition: theme.transitions.create('margin', {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-        }),
-        marginLeft: `20px`,
-        ...(open && {
-            transition: theme.transitions.create('margin', {
-                easing: theme.transitions.easing.easeOut,
-                duration: theme.transitions.duration.enteringScreen,
-            }),
-
-        }),
-        paddingLeft: open ? `${drawerWidth}px` : 0,
+    })(({ theme, open }) => ({
+    flexGrow: 1,
+    padding: theme.spacing(2.5),
+    transition: theme.transitions.create('margin', {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.leavingScreen,
     }),
-);
+
+    ...(open && {
+        transition: theme.transitions.create('margin', {
+            easing: theme.transitions.easing.easeOut,
+            duration: theme.transitions.duration.enteringScreen,
+        }),
+    }),
+    paddingLeft: open ? `calc(${drawerWidth}+5px)` : `calc(${theme.spacing(7)} + 28px)`,
+    backgroundColor: theme.palette.background.paper,
+    // Prevents vertical scrolling within this main content area
+    overflowY: 'hidden', // adjust according to your needs
+    position: 'absolute', // ensures the component is positioned relative to its nearest positioned ancestor
+    top: '3px', // matches the height of the AppBar; adjust as necessary
+    left: 0,
+    right: 0,
+    bottom: 0,
+}));
 const openedMixin = (theme) => ({
     width: drawerWidth,
     transition: theme.transitions.create('width', {
@@ -97,15 +96,15 @@ const AppBar = styled(MuiAppBar, {
     shouldForwardProp: (prop) => prop !== 'open',
 })(({ theme, open }) => ({
     zIndex: theme.zIndex.drawer + 1,
-    transition: theme.transitions.create(['width', 'margin'], {
+    transition: theme.transitions.create(['margin', 'width'], {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
     }),
     ...(open && {
         marginLeft: drawerWidth,
         width: `calc(100% - ${drawerWidth}px)`,
-        transition: theme.transitions.create(['width', 'margin'], {
-            easing: theme.transitions.easing.sharp,
+        transition: theme.transitions.create(['margin', 'width'], {
+            easing: theme.transitions.easing.easeOut,
             duration: theme.transitions.duration.enteringScreen,
         }),
     }),
@@ -127,14 +126,8 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
         flexShrink: 0,
         whiteSpace: 'nowrap',
         boxSizing: 'border-box',
-        ...(open && {
-            ...openedMixin(theme),
-            '& .MuiDrawer-paper': openedMixin(theme),
-        }),
-        ...(!open && {
-            ...closedMixin(theme),
-            '& .MuiDrawer-paper': closedMixin(theme),
-        }),
+        ...(open ? openedMixin(theme) : closedMixin(theme)),
+        '& .MuiDrawer-paper': open ? openedMixin(theme) : closedMixin(theme),
     }),
 );
 
@@ -144,6 +137,7 @@ export default function Header_SideBar() {
     const { state, actions } = useStore();
     const [open, setOpen] = React.useState(false);
     const [openSettingsModal, setOpenSettingsModal] = useState(false);
+    const [openFileSystemModal, setOpenFileSystemModal] = useState(false);
     const handleDrawerOpen = () => {
         setOpen(true);
     };
@@ -176,6 +170,9 @@ export default function Header_SideBar() {
 
     const handleOpenSettingsModal = () => setOpenSettingsModal(true);
     const handleCloseSettingsModal = () => setOpenSettingsModal(false);
+
+    const handleOpenFileSystemModal = () => setOpenSettingsModal(true);
+    const handleCloseFileSystemModal = () => setOpenSettingsModal(false);
 
    return (
         <MuiThemeProvider>
@@ -215,7 +212,11 @@ export default function Header_SideBar() {
                             <SettingsIcon />
                         </IconButton>
                     </Tooltip>
-
+                    <Tooltip title="File System">
+                        <IconButton onClick={handleOpenFileSystemModal}>
+                            <ArchiveIcon />
+                        </IconButton>
+                    </Tooltip>
 
                 </Toolbar>
             </AppBar>
@@ -241,6 +242,7 @@ export default function Header_SideBar() {
                 <Modal
                     open={openSettingsModal}
                     onClose={handleCloseSettingsModal}
+                    modalType="settings"
                     aria-labelledby="settings-modal-title"
                     aria-describedby="settings-modal-description"
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} // Centering the modal
@@ -258,22 +260,44 @@ export default function Header_SideBar() {
                         <Settings /> {/* Your Settings Component */}
                     </Box>
                 </Modal>
+                <Modal
+                    open={openFileSystemModal}
+                    onClose={handleCloseFileSystemModal}
+                    modalType="fileSystem"
+                    aria-labelledby="file-system-modal-title"
+                    aria-describedby="file-system-modal-description"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            width: 500,
+                            bgcolor: 'background.paper',
+                            boxShadow: 24,
+                            p: 0,
+                            outline: 'none'
+                        }}
+                    >
+                        <FileSystem /> {/* Our file system overlay component */}
+                    </Box>
+                </Modal>
                 <Main open={open}>
-                    <MainPaper
+                    <div
                         elevation={0}
                         square={true}
                         className={classNames('full-size', classes.root)}
                         sx={{
-                           '& .MuiDrawer-paper': {
-                               bgcolor: theme.palette.mode === 'dark' ? '#2B2D30' : '#FFFFFF',
-                           },
-                           backgroundColor: theme.palette.background.paper,
-                            marginRight: 0,
-
+                            '& .MuiDrawer-paper': {
+                                bgcolor: theme.palette.mode === 'dark' ? '#2B2D30' : '#FFFFFF',
+                            },
+                            backgroundColor: theme.palette.background.paper,
+                            width: '100%', // set the width to 100% of the parent container
+                            maxWidth: 'lg', // set a maximum width based on the screen size
+                            mx: 2, // add a consistent margin on both sides
                         }}>
                         <Editor />
 
-                    </MainPaper>
+                    </div>
 
                 </Main>
 
