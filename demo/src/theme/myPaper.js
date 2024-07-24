@@ -7,7 +7,7 @@ const MyPaperComp = styled(Paper)(({ theme }) => ({
     background: theme.palette.background.paper,
     border: `1px solid ${theme.palette.border.primary}`,
     color: theme.palette.text.primary,
-    marginTop: 60,
+    marginTop: 0,
     padding: 20,
 }));
 

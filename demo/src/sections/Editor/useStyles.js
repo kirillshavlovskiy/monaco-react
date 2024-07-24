@@ -39,7 +39,7 @@ import { makeStyles } from '@material-ui/core/styles';
     },
     editor: {
       marginBottom: 12,
-      marginTop: 20,
+      marginTop: 60,
       marginRight: 15,
       paddingTop: -5,
 

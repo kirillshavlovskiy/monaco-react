@@ -27,6 +27,7 @@
 
 
     const Editor = () => {
+        const { state } = useStore();
         const theme = useTheme();
         const classes = useStyles();
         const webSocket = useRef(null);
@@ -276,7 +277,7 @@
 
                                      bgcolor: theme.palette.mode === theme.palette.background.paper,
                                      color: fontClr,
-                                     border: "1px solid #464646"
+                                     border: "1px solid #464646",
                                  }
                              }}
                 >
@@ -299,7 +300,7 @@
                             <MonacoEditor
                                 key="monaco_editor"
                                 theme={monacoTheme}
-                                height="69.5vh"
+                                height="70vh"
                                 width="75vh"
                                 path={language}
                                 defaultValue={editorContent}
@@ -315,7 +316,12 @@
                         <Interface />
                     )}
                     {value === 2 && (
-                        <FileSystem />
+                        // Check if the user is logged in before rendering FileSystem
+                        !state.user ? (
+                            <div>Please log in to access the file system.</div>
+                        ) : (
+                            <FileSystem />
+                        )
                     )}
                     <div className={classes.buttonContainer}>
 

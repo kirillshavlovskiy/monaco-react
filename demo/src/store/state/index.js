@@ -94,9 +94,12 @@ const initialState = {
   ai_editorValue: '',
   monacoTheme: initalTheme === 'dark' ? 'vs-dark' : initalTheme,
 
+  user: null,
+
   diffEditor: {
     selectedLanguageId: 24, // 24 is the id of markdown
   },
 };
+
 
 export { initialState };

@@ -11,30 +11,7 @@ import { isMobile } from 'utils';
 import useStyles from './useStyles';
 import {withStyles} from "@material-ui/core/styles";
 import { useTheme } from '@mui/material';
-import { MyPaper } from 'theme';
-
-const CustomTextField = withStyles((theme) => ({
-  root: {
-    '& .MuiFilledInput-input': {
-      backgroundColor: '#323232',
-      color: '#FFFFFF',
-    },
-    '& .MuiFilledInput-underline:before': {
-      borderBottomColor: '#FFFFFF'
-    },
-    '& .MuiFilledInput-underline:after': {
-      borderBottomColor: theme.palette.text.primary
-    },
-    '& .MuiInputLabel-outlined:not(.MuiInputLabel-shrink)': {
-      color: 'green',
-    },
-    // Focused label
-    '& .MuiInputLabel-shrink': {
-      color: 'orange',
-    },
-  }
-}))(TextField);
-
+import { MyPaper, CustomTextField } from 'theme';
 
 
 

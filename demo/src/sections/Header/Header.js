@@ -23,13 +23,14 @@ import Box from "@mui/material/Box";
 import Content from 'sections/Content';
 import Editor from 'sections/Editor';
 import Settings from 'sections/Settings';
-import FileSystem from 'sections/Settings';
+import SignUp from 'sections/SignUp';
 import Paper from "@mui/material/Paper";
 import SideBar from "../SideBar";
 import { MuiThemeProvider} from 'theme';
 import { Modal, Button } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
-import ArchiveIcon from '@mui/icons-material/Settings';
+import TuneIcon from '@mui/icons-material/Tune';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 
@@ -57,7 +58,7 @@ const Main = styled('main', {
     // Prevents vertical scrolling within this main content area
     overflowY: 'hidden', // adjust according to your needs
     position: 'absolute', // ensures the component is positioned relative to its nearest positioned ancestor
-    top: '3px', // matches the height of the AppBar; adjust as necessary
+    top: '60px', // matches the height of the AppBar; adjust as necessary
     left: 0,
     right: 0,
     bottom: 0,
@@ -137,12 +138,11 @@ export default function Header_SideBar() {
     const { state, actions } = useStore();
     const [open, setOpen] = React.useState(false);
     const [openSettingsModal, setOpenSettingsModal] = useState(false);
-    const [openFileSystemModal, setOpenFileSystemModal] = useState(false);
+    const [openSignUpModal, setOpenSignUpModal] = useState(false);
     const handleDrawerOpen = () => {
         setOpen(true);
     };
-
-
+    const isAuthenticated = state.user !== null;
     const handleDrawerToggle = () => {
         setOpen(!open);
     };
@@ -171,8 +171,8 @@ export default function Header_SideBar() {
     const handleOpenSettingsModal = () => setOpenSettingsModal(true);
     const handleCloseSettingsModal = () => setOpenSettingsModal(false);
 
-    const handleOpenFileSystemModal = () => setOpenSettingsModal(true);
-    const handleCloseFileSystemModal = () => setOpenSettingsModal(false);
+    const handleOpenSignUpModal = () => setOpenSignUpModal(true);
+    const handleCloseSignUpModal = () => setOpenSignUpModal(false);
 
    return (
         <MuiThemeProvider>
@@ -209,13 +209,22 @@ export default function Header_SideBar() {
                     </Tooltip>
                     <Tooltip title="Settings">
                         <IconButton onClick={handleOpenSettingsModal}>
-                            <SettingsIcon />
+                            <TuneIcon />
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title="File System">
-                        <IconButton onClick={handleOpenFileSystemModal}>
-                            <ArchiveIcon />
+                    <Tooltip title={isAuthenticated ? "Manage Account" : "Login/Sign Up"}>
+                        <IconButton
+                            onClick={handleOpenSignUpModal}
+                            sx={{
+                                color: isAuthenticated ? '#90CAF9' : 'inherit',
+                                '&:hover': {
+                                    backgroundColor: isAuthenticated ? 'rgba(144, 202, 249, 0.08)' : 'rgba(255, 255, 255, 0.08)',
+                                },
+                            }}
+                        >
+                            <ManageAccountsIcon />
                         </IconButton>
+
                     </Tooltip>
 
                 </Toolbar>
@@ -261,8 +270,8 @@ export default function Header_SideBar() {
                     </Box>
                 </Modal>
                 <Modal
-                    open={openFileSystemModal}
-                    onClose={handleCloseFileSystemModal}
+                    open={openSignUpModal}
+                    onClose={handleCloseSignUpModal}
                     modalType="fileSystem"
                     aria-labelledby="file-system-modal-title"
                     aria-describedby="file-system-modal-description"
@@ -278,7 +287,7 @@ export default function Header_SideBar() {
                             outline: 'none'
                         }}
                     >
-                        <FileSystem /> {/* Our file system overlay component */}
+                        <SignUp/> {/* Our file system overlay component */}
                     </Box>
                 </Modal>
                 <Main open={open}>

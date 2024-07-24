@@ -61,6 +61,7 @@ const setThemeBackground = ({ state }, color) => {
 const setFontColor = ({ state }, color) => {
   state.fontColor = color;
 };
+
 const setNewCode = ({state}, code) => {  // <-- Add setNewCode action for updating newCode in state
   state.newCode = code;
 };
@@ -79,6 +80,10 @@ function executeCode (code) {
       .then(data => console.log(data.message)); // Log the response message from Django
 }
 
+const setUser = ({ state }, user) => {
+  state.user = user;
+};
+
 export {
   executeCode,
   hideNotification,
@@ -92,4 +97,5 @@ export {
   setThemeBackground,
   editor,
   diffEditor,
+  setUser
 };
