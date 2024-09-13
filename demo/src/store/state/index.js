@@ -12,7 +12,7 @@ const initialState = {
   notifications: config.notifications.defaultState,
 
   editor: {
-    selectedLanguageId: 37, // 19 is the id of javasctipt
+    selectedLanguageId: 19, // 19 is the id of javasctipt
     options: {
       inlayHintsOptions: true,
       acceptSuggestionOnCommitCharacter: true,
@@ -49,6 +49,7 @@ const initialState = {
         horizontalSliderSize: 1,
         verticalSliderSize: 1,
       },
+      stickyScroll: { enabled: false },
       mouseWheelZoom: true,
       multiCursorMergeOverlapping: true,
       multiCursorModifier: 'alt',
@@ -56,7 +57,7 @@ const initialState = {
       overviewRulerLanes: 2,
       provideInlayHints: true,
       quickSuggestions: true,
-      quickSuggestionsDelay: 100,
+      quickSuggestionsDelay: 200,
       readOnly: false,
       renderControlCharacters: false,
       renderFinalNewline: true,
@@ -67,17 +68,17 @@ const initialState = {
       roundedSelection: true,
       rulers: [],
       scrollBeyondLastColumn: 5,
-      scrollBeyondLastLine: true,
+      scrollBeyondLastLine: false,
       selectOnLineNumbers: true,
       selectionClipboard: true,
       selectionHighlight: true,
       showFoldingControls: 'mouseover',
-      smoothScrolling: true,
+      smoothScrolling: false,
       suggestOnTriggerCharacters: true,
-      wordBasedSuggestions: true,
+      wordBasedSuggestions: false,
       // eslint-disable-next-line
       wordSeparators: `~!@#$%^&*()-=+[{]}\|;:'",.<>/?`,
-      wordWrap: 'off',
+      wordWrap: 'on',
       wordWrapBreakAfterCharacters: '\t})]?|&,;',
       wordWrapBreakBeforeCharacters: '{([+',
       wordWrapBreakObtrusiveCharacters: '.',
@@ -88,9 +89,13 @@ const initialState = {
   },
 
   editorMode: 'editor',
+  editorTab: 0,
   themeBackground: '#1E1E1E',
   fontColor: '#EDECE4',
   newCode: '',
+  uiContext: {
+    screenshot: null
+  },
   ai_editorValue: '',
   monacoTheme: initalTheme === 'dark' ? 'vs-dark' : initalTheme,
 

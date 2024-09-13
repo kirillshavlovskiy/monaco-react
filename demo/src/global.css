@@ -12,6 +12,14 @@ code {
   'JetBrains Mono', monospace;
 }
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.tailwind-preflight {
+  @apply text-base;
+}
+
 .tool_bar {
   width: 80px;
 

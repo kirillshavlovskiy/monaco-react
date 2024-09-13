@@ -41,7 +41,7 @@ import { makeStyles } from '@material-ui/core/styles';
       marginBottom: 12,
       marginTop: 60,
       marginRight: 15,
-      paddingTop: -5,
+      paddingTop: 0,
 
     },
     editorWrapper: {
@@ -61,7 +61,7 @@ import { makeStyles } from '@material-ui/core/styles';
       marginRight: 0,
     },
     execute_button: {
-      marginTop: 15,
+      marginTop: 20,
       marginLeft: 10,
       marginButtom: 0,
       backgroundColor: '#90CAF9',

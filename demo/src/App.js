@@ -3,9 +3,8 @@ import React from 'react';
 import { MuiThemeProvider }  from 'theme';
 import ErrorBoundary from 'react-error-boundary';
 import ErrorBoundaryFallback from 'components/ErrorBoundaryFallback';
+import Notifications from 'notifications';
 import Layout from 'layout';
-
-
 
 export const App = () => (
     <MuiThemeProvider>
@@ -13,6 +12,7 @@ export const App = () => (
 
 
       <Layout />
+            <Notifications />
 
         </ErrorBoundary>
     </MuiThemeProvider>

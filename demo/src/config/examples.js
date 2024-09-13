@@ -573,61 +573,44 @@ const examples = {
      }
   `),
   19: rTabs(`
-    // the code example from https://github.com/suren-atoyan/state-local
+    import React, { useState } from 'react';
 
-    import { compose, curry, isFunction } from '../utils';
-    import validators from '../validators';
-    
-    function create(initial, handler = {}) {
-      validators.initial(initial);
-      validators.handler(handler);
-    
-      const state = { current: initial };
-    
-      const didUpdate = curry(didStateUpdate)(state, handler);
-      const update = curry(updateState)(state);
-      const validate = curry(validators.changes)(initial);
-      const getChanges = curry(extractChanges)(state);
-    
-      function getState(selector = state => state) {
-        validators.selector(selector);
-        return selector(state.current);
-      }
-    
-      function setState(causedChanges) {
-        compose(
-          didUpdate,
-          update,
-          validate,
-          getChanges,
-        )(causedChanges);
-      }
-    
-      return [getState, setState];
-    }
-    
-    function extractChanges(state, causedChanges) {
-      return isFunction(causedChanges)
-        ? causedChanges(state.current)
-        : causedChanges;
-    }
-    
-    function updateState(state, changes) {
-      state.current = { ...state.current, ...changes };
-    
-      return changes;
-    }
-    
-    function didStateUpdate(state, handler, changes) {
-      isFunction(handler)
-        ? handler(state.current)
-        : Object.keys(changes)
-            .forEach(field => handler[field]?.(state.current[field]));
-    
-      return changes;
-    }
-    
-    export { create };   
+const App = () => {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100vh',
+      fontFamily: 'Arial, sans-serif',
+      backgroundColor: '#f0f0f0'
+    }}>
+      <h1 style={{ color: '#333' }}>Hello, World!</h1>
+      <p>Welcome to your React playground.</p>
+      <p>You've clicked the button {count} times.</p>
+      <button 
+        onClick={() => setCount(count + 1)}
+        style={{
+          padding: '10px 20px',
+          fontSize: '16px',
+          backgroundColor: '#007bff',
+          color: 'white',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: 'pointer'
+        }}
+      >
+        Click me
+      </button>
+    </div>
+  );
+};
+
+export default App;
+  
   `),
   20: rTabs(`
     {

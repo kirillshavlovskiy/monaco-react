@@ -2,6 +2,10 @@ import React, {useState, useRef, useEffect} from 'react';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import Button from '@material-ui/core/Button';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
 import Editor from '@monaco-editor/react';
 import { useStore } from 'store';
 import config from 'config';
@@ -19,8 +23,16 @@ import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
 import Box from "@mui/material/Box";
 import ai_code from "../../config/ai";
-import Interface from "../Editor/Interface/Interface";
-import examples from "../../config/examples";
+import axios from 'axios';
+import IconButton from "@mui/material/IconButton";
+import MenuIcon from "@mui/icons-material/Menu";
+import {CustomTextField} from "theme";
+import {StyledToggleButton} from "theme";
+
+
+const PRIMARY_THREAD = { id: '0', name: 'Main Thread' };
+const SECONDARY_THREAD = { id: '0', name: 'Main Thread' };
+const TEST_THREAD = { id: '0', name: 'Main Thread' };
 
 const CustomDivider = withStyles((theme) => ({
     root: {
@@ -37,27 +49,84 @@ const Console = _ => {
     const [isEditorReady, setIsEditorReady] = useState(false);
     const {
         state: { editor: { selectedLanguageId, options }, monacoTheme },
-        actions: { editor: { setSelectedLanguageId, setOptions, setMonacoTheme }, showNotification, setNewCode},
+        actions: { editor: { setSelectedLanguageId, setOptions, setMonacoTheme }, showNotification, setNewCode },
         effects: { defineTheme, monacoThemes },
     } = useStore();
 
-    const [messages, setMessages] = useState([]);
-    const theme = useTheme()
+    const theme = useTheme();
     const editorRef = useRef();
-    const [consoleText, setConsoleText] = useState(''); // Store received messages from backend
     const [editorContent, setEditorContent] = useState(ai_code || '');
-    //const [editorWidth, setEditorWidth] = useState('50%');
-
+    const [threads, setThreads] = useState([PRIMARY_THREAD]);
+    const [selectedThreadId, setSelectedThreadId] = useState(PRIMARY_THREAD.id);
+    const [isLoading, setIsLoading] = useState(true);
     const { state: { editor: themeBackground, fontColor, isSettingsVisible, isSideBarVisible }, actions: setThemeBackground } = useStore();
     const language = config.supportedLanguages.find(({ id }) => id === selectedLanguageId).name;
-    const [newEditorContent, setNewEditorContent] = useState(ai_code || '');
     const [consoleValue, setConsoleValue] = React.useState(0);
     const [fontClr, setFontClr] = useState(fontColor);
+    const [anchorEl, setAnchorEl] = useState(null);
 
+    useEffect(() => {
+        fetchThreads();
+    }, []);
 
-    const handleChange = (event, newAIValue) => {
-        setConsoleValue(newAIValue);
+    const fetchThreads = async () => {
+        setIsLoading(true);
+        try {
+            const response = await axios.get('/api/threads/');
+            if (response.data.length > 0) {
+                setThreads([PRIMARY_THREAD, ...response.data]);
+            } else {
+                // If no threads from API, we already have the default thread
+                setThreads([PRIMARY_THREAD]);
+            }
+            // Always select the default thread if no thread is currently selected
+            if (!selectedThreadId) {
+                setSelectedThreadId(PRIMARY_THREAD.id);
+            }
+        } catch (error) {
+            console.error("Error fetching threads:", error);
+            showNotification('Error fetching threads', 'error');
+            // In case of error, we still have the default thread
+            setThreads([PRIMARY_THREAD]);
+            setSelectedThreadId(PRIMARY_THREAD.id);
+        }
+        setIsLoading(false);
     };
+
+    const handleThreadChange = (event) => {
+        setSelectedThreadId(event.target.value);
+    };
+
+    const createNewThread = async (name = `Thread ${threads.length + 1}`) => {
+        try {
+            const response = await axios.post('/api/threads/', { name });
+            const newThread = response.data;
+            setThreads(prevThreads => [...prevThreads, newThread]);
+            setSelectedThreadId(newThread.id);
+            return newThread;
+        } catch (error) {
+            console.error("Error creating new thread:", error);
+            showNotification('Error creating new thread', 'error');
+        }
+    };
+    const handleThreadMenuOpen = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleThreadMenuClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleThreadSelect = (threadId) => {
+        setSelectedThreadId(threadId);
+        handleThreadMenuClose();
+    };
+
+
+    const handleChange = (event, newValue) => {
+        setConsoleValue(newValue);
+    };
+
     function handleEditorWillMount(monaco) {
         monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
             target: monaco.languages.typescript.ScriptTarget.Latest,
@@ -125,9 +194,18 @@ const Console = _ => {
 
     const handleEditorChange = (newValue) => {
         setNewCode(newValue);
-        setEditorContent(newValue);  // Update context with new content
+        setEditorContent(newValue);
         console.log('updated code:', newValue);
     };
+
+    const StyledBox = styled(Box)(({ theme }) => ({
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+        marginBottom: theme.spacing(2),
+    }));
+
 
     return (
     <div className={classes.root}>
@@ -148,33 +226,51 @@ const Console = _ => {
                 className={classes.tabsStyled}
                 style={{marginTop: "-20px", marginBottom: "15px", hight: "7.5px"}}
             >
-                <StyledTab className={classes.tab} label="Agent Console" />
-                <StyledTab className={classes.tab} label="Code" />
-                <StyledTab className={classes.tab} label="Visual Board" />
+                <StyledTab className={classes.tab} label="Primary Thread" />
+                <StyledTab className={classes.tab} label="Secondary Thread" />
+                <StyledTab className={classes.tab} label="Test Thread" />
 
             </StyledTabs>
 
-            {consoleValue === 0 && (
-                <Chat />
-            )}
-            {consoleValue === 1 && (
-                <MonacoEditor
-                key="monaco_editor"
-                theme={monacoTheme}
-                height="69.5vh"
-                width="75vh"
-                path={language}
-                defaultValue={editorContent}
-                defaultLanguage={language}
-                options={options}
-                beforeMount={handleEditorWillMount}
-                onMount={handleEditorDidMount}
+                    {/*<Box sx={{ display: 'flex', alignItems: 'center', marginTop: -2.5 }}>*/}
+                    {/*    <FormControl variant="filled" sx={{ minWidth: 120, mr: 2 }} size="small">*/}
+                    {/*        <CustomTextField*/}
+                    {/*            select*/}
+                    {/*            variant="filled"*/}
+                    {/*            value={selectedThreadId}*/}
+                    {/*            onChange={handleThreadChange}*/}
+                    {/*            label="Thread"*/}
+                    {/*        >*/}
+                    {/*            {threads.map(thread => (*/}
+                    {/*                <MenuItem key={thread.id} value={thread.id}>*/}
+                    {/*                    {thread.name}*/}
+                    {/*                </MenuItem>*/}
+                    {/*            ))}*/}
+                    {/*        </CustomTextField>*/}
+                    {/*    </FormControl>*/}
+                    {/*</Box>*/}
 
-                onChange={handleEditorChange}
-                />
+
+                {consoleValue === 0 && (
+                    isLoading ? (
+                        <Typography>Loading chat...</Typography>
+                    ) : (
+                        <Chat threadId={0} />
+                    )
+                )}
+            {consoleValue === 1 && (
+                isLoading ? (
+                    <Typography>Loading chat...</Typography>
+                ) : (
+                    <Chat threadId={1} />
+                )
             )}
             {consoleValue === 2 && (
-                <ChatComponent/>
+                isLoading ? (
+                    <Typography>Loading chat...</Typography>
+                ) : (
+                    <Chat threadId={2} />
+                )
             )}
 
         </MyPaper>

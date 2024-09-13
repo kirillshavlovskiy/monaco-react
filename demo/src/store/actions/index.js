@@ -1,7 +1,3 @@
-const setIsEditorReady = ({ state }, isReady) => {
-  state.isEditorReady = isReady;
-};
-
 const setIsSettingsVisible = ({ state }, value) => {
       state.isSettingsVisible = value;
 };
@@ -19,12 +15,13 @@ const setEditorMode = ({ state }, editorMode) => {
 };
 
 const showNotification = ({ state }, { message, variant = 'info', opt = {} }) => {
+  console.log("Showing notification:", { message, variant, opt }); // Add this line
   state.notifications = {
     isActive: true,
     message,
     variant,
     opt,
-  }; // now designed for only one message
+  };
 };
 
 const hideNotification = ({ state }) => {
@@ -62,9 +59,6 @@ const setFontColor = ({ state }, color) => {
   state.fontColor = color;
 };
 
-const setNewCode = ({state}, code) => {  // <-- Add setNewCode action for updating newCode in state
-  state.newCode = code;
-};
 function executeCode (code) {
  // we are provided with code value
   const inputData = { message: { code: code, input_values: null } }; // Prepare the request payload
@@ -80,6 +74,30 @@ function executeCode (code) {
       .then(data => console.log(data.message)); // Log the response message from Django
 }
 
+const setIsEditorReady = ({ state }, isReady) => {
+  state.isEditorReady = isReady;
+};
+
+// ... (other actions remain the same)
+
+const setEditorTab = ({ state }, tabIndex) => {
+  console.log('setEditorTab action called with:', tabIndex);
+  state.editorTab = tabIndex;
+};
+
+const setOpenedFile = ({ state }, file) => {
+  console.log('setOpenedFile action called with:', file);
+  state.openedFile = file;
+};
+
+const setNewCode = ({state}, code) => {
+  state.newCode = code;
+};
+
+const setUiContext = ({state}, uiContext) => {
+  state.uiContext = uiContext;  // This should be uiContext, not newCode
+};
+
 const setUser = ({ state }, user) => {
   state.user = user;
 };
@@ -88,6 +106,7 @@ export {
   executeCode,
   hideNotification,
   setNewCode,
+  setUiContext,
   setThemeMode,
   setEditorMode,
   setIsEditorReady,
@@ -97,5 +116,7 @@ export {
   setThemeBackground,
   editor,
   diffEditor,
-  setUser
+  setUser,
+  setEditorTab,
+  setOpenedFile  // Add this new action to the exports
 };

@@ -25,6 +25,11 @@ const useStyles = makeStyles(theme => ({
   message: {
     display: 'flex',
     alignItems: 'center',
+    color: theme.palette.common.white, // Add this line to ensure text is always visible
+  },
+  // You might want to add a style for the content wrapper itself
+  content: {
+    flexWrap: 'nowrap', // Prevents the message from wrapping
   },
 }));
 

@@ -1,293 +1,364 @@
-    import React, { useState, useEffect, useRef, memo } from 'react';
-    import MonacoEditor from '@monaco-editor/react';
-    import Settings from 'sections/Settings';
-    import Interface from './Interface/Interface';
-    import FileSystem from 'sections/FileSystem';
-    import Console from 'sections/Console';
-    import { useStore } from 'store';
-    import { isMobile } from 'utils';
-    import examples from 'config/examples';
-    import config from 'config';
-    import useStyles from './useStyles';
-    import Typography from "@material-ui/core/Typography";
-    import Button from "@material-ui/core/Button";
-    import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-    import HandymanRoundedIcon from '@mui/icons-material/HandymanRounded';
-    import {MyPaper} from 'theme';
-    import {styled, useTheme} from "@mui/material/styles";
-    import Drawer from "@mui/material/Drawer";
-    import Tab from '@material-ui/core/Tab';
-    import Tabs from '@material-ui/core/Tabs';
-    import Box from '@mui/material/Box';
-    import axios from 'axios';
-    import code from '../../config/code.py'
-    // Import ChatContext
-    import ChatContext from './ChatContext.js';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { debounce } from 'lodash';
+import MonacoEditor from '@monaco-editor/react';
+import Interface from './Interface/Interface';
+import FileSystem from 'sections/FileSystem';
+import Console from 'sections/Console';
+import { useStore } from 'store';
+import examples from 'config/examples';
+import config from 'config';
+import useStyles from './useStyles';
+import Button from "@material-ui/core/Button";
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import HandymanRoundedIcon from '@mui/icons-material/HandymanRounded';
+import {MyPaper} from 'theme';
+import {styled, useTheme} from "@mui/material/styles";
+import Tab from '@material-ui/core/Tab';
+import Tabs from '@material-ui/core/Tabs';
+import Box from '@mui/material/Box';
+import ChatContext from './ChatContext.js';
 
+const StateLogger = () => {
+    const { newCode, editorTab, openedFile } = useStore(state => ({
+        newCode: state.newCode,
+        editorTab: state.editorTab,
+        openedFile: state.openedFile
+    }));
 
+    useEffect(() => {
+        console.log('Relevant state updated:', { newCode, editorTab, openedFile });
+    }, [newCode, editorTab, openedFile]);
 
-    const Editor = () => {
-        const { state } = useStore();
-        const theme = useTheme();
-        const classes = useStyles();
-        const webSocket = useRef(null);
-        //const [editorWidth, setEditorWidth] = useState('50%');
-        const [isEditorReady, setIsEditorReady] = useState(false);
-        const {
-            state: {
-                editor: {selectedLanguageId, options},
-                monacoTheme,
-                themeBackground,
-                fontColor,
-                newCode,
-                isSettingsVisible,
-                isSideBarVisible
-            }, actions: {setNewCode}
-        } = useStore();
-        const language = config.supportedLanguages.find(({id}) => id === selectedLanguageId).name;
-        const editorRef = useRef();
-        const [message, setMessage] = useState("");
-        const [editorContent, setEditorContent] = useState(examples[selectedLanguageId] || '');
-        const [value, setValue] = React.useState(0);
-        const [fontClr, setFontClr] = useState(fontColor);
+    return null;
+};
 
-        const handleChange = (event, newValue) => {
-            setValue(newValue);
+const Editor = () => {
+    const { state, actions } = useStore();
+    const theme = useTheme();
+    const classes = useStyles();
+    const webSocket = useRef(null);
+    const [isEditorReady, setIsEditorReady] = useState(false);
+    const [lastFileName, setLastFileName] = useState('');
+    const {
+        state: {
+            editor: {selectedLanguageId, options},
+            monacoTheme,
+            themeBackground,
+            fontColor,
+            newCode,
+            editorTab,
+            isSettingsVisible,
+            isSideBarVisible,
+            openedFile
+        },
+        actions: {setNewCode, setEditorTab}
+    } = useStore();
+    const interfaceRef = useRef(null);
+    const language = config.supportedLanguages.find(({id}) => id === selectedLanguageId).name;
+    const editorRef = useRef();
+    const [message, setMessage] = useState("");
+    const [value, setValue] = React.useState(0);
+    const [fontClr, setFontClr] = useState(fontColor);
+    const [editorContent, setEditorContent] = useState(() => examples[selectedLanguageId] || '');
+    const [currentLanguage, setCurrentLanguage] = useState(() => config.supportedLanguages.find(({id}) => id === selectedLanguageId).name);
 
+    const fileSystemSocketRef = useRef(null);
+
+    const handleChange = (event, newValue) => {
+        setEditorTab(newValue);
+    };
+
+    useEffect(() => {
+        setNewCode(editorContent);
+    }, []);
+
+    useEffect(() => {
+        if (interfaceRef.current) {
+            interfaceRef.current.setVisibility(editorTab === 1);
+        }
+    }, [editorTab]);
+
+    const getLanguageFromFileName = (fileName) => {
+        const extension = fileName.split('.').pop().toLowerCase();
+        const languageMap = {
+            'py': 'python',
+            'js': 'react',
+            'html': 'html',
+            'css': 'css',
+            'json': 'json',
+        };
+        return languageMap[extension] || 'react';
+    };
+
+    const connectFileSystemWebSocket = () => {
+        const ws = new WebSocket('ws://localhost:8000/ws/file_structure/');
+
+        ws.onopen = () => {
+            console.log('File System WebSocket connected');
         };
 
-        function handleEditorWillMount(monaco) {
-            monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-                target: monaco.languages.typescript.ScriptTarget.Latest,
-                module: monaco.languages.typescript.ModuleKind.ES2015,
-                allowNonTsExtensions: true,
-                lib: ['es2018'],
-            });
-        }
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'file_content' && data.id === openedFile?.id) {
+                setEditorContent(data.content);
+                setNewCode(data.content);
+            }
+            // Handle other message types...
+        };
 
-        function handleEditorDidMount(editor, monaco) {
-            editorRef.current = editor; // Assign editor instance
-            //editorRef.current.layout(); // Force editor's layout adjustfunction handleEditorDidMount(editor, monaco) {
-            setIsEditorReady(true);
-            setNewCode(editorRef.current?.getValue());
-        }
-        function getEditorValue() {
-            return editorRef.current?.getValue();
-        }
+        ws.onerror = (error) => {
+            console.error('File System WebSocket error:', error);
+        };
 
+        ws.onclose = () => {
+            console.log('File System WebSocket disconnected');
+            // Attempt to reconnect after a delay
+            setTimeout(connectFileSystemWebSocket, 3000);
+        };
 
-        const StyledTabs = styled((props) => (
-            <Tabs
-                {...props}
-                TabIndicatorProps={{children: <span className="MuiTabs-indicatorSpan"/>}}
-            />
-        ))({
-            '& .MuiTabs-indicator': {
-                display: 'flex',
-                justifyContent: 'center',
-                backgroundColor: 'transparent',
-            },
-            '& .MuiTabs-indicatorSpan': {
-                maxWidth: 100,
-                width: '100%',
-                backgroundColor: fontClr,
-            },
+        fileSystemSocketRef.current = ws;
+    };
+
+    useEffect(() => {
+        connectFileSystemWebSocket();
+        return () => {
+            if (fileSystemSocketRef.current) {
+                fileSystemSocketRef.current.close();
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        console.log('newCode changed:', newCode);
+        if (newCode !== editorContent) {
+            setEditorContent(newCode);
+        }
+    }, [newCode]);
+
+    useEffect(() => {
+        console.log('openedFile changed:', openedFile);
+    }, [openedFile]);
+
+    useEffect(() => {
+        console.log('Editor: editorTab changed:', state.editorTab);
+    }, [state.editorTab]);
+
+    useEffect(() => {
+        if (isEditorReady && editorRef.current) {
+            const currentValue = editorRef.current.getValue();
+            if (editorContent !== currentValue) {
+                editorRef.current.setValue(editorContent);
+            }
+        }
+    }, [editorContent, isEditorReady]);
+
+    useEffect(() => {
+        console.log('openedFile changed:', openedFile);
+        if (openedFile) {
+            setCurrentLanguage(getLanguageFromFileName(openedFile.name));
+            if (fileSystemSocketRef.current && fileSystemSocketRef.current.readyState === WebSocket.OPEN) {
+                fileSystemSocketRef.current.send(JSON.stringify({
+                    action: 'get_file_content',
+                    id: openedFile.id
+                }));
+            }
+        } else {
+            setCurrentLanguage('react');
+            setEditorContent(examples['react'] || '');
+            setNewCode(examples['react'] || '');
+        }
+    }, [openedFile, setNewCode]);
+
+    useEffect(() => {
+        setFontClr(fontColor);
+    }, [fontColor]);
+
+    function handleEditorWillMount(monaco) {
+        monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+            target: monaco.languages.typescript.ScriptTarget.Latest,
+            module: monaco.languages.typescript.ModuleKind.ES2015,
+            allowNonTsExtensions: true,
+            lib: ['es2018'],
         });
-
-        const StyledTab = styled((props) => (
-            <Tab
-                disableRipple
-                {...props}
-                label={
-                    <Box p={0}>  {/* Adjust padding here as required */}
-                        {props.label}
-                    </Box>}
-            />
-        ))(({theme}) => ({
-
-            '&.Mui-selected': {
-                color: fontClr,
-            },
-            '&:not(:last-child)::after': {
-                content: '""',
-                display: 'block',
-                position: 'absolute',
-                height: '50%',
-                top: '25%',
-                right: 0,
-                borderRight: `1px solid ${fontClr}`,
-            }
-        }));
-        console.log(themeBackground);
-        useEffect(() => {
-            setFontClr(fontColor);
-        }, [fontColor]);
-
-        useEffect(() => {
-            if (editorRef.current && newCode !== editorRef.current.getValue()) {
-                editorRef.current.setValue(newCode);
-                }
-        }, [newCode]);
-
-        useEffect(() => {
-            if (editorRef.current && code !== editorRef.current.getValue()) {
-                editorRef.current.setValue(code);
-            }
-        }, [code]);
-
-        const [messages, setMessages] = useState([]);
-        const pythonContentRegex = /(?<=```python\n)[\s\S]+(?=\n```)/gm;
-        const pythonCodeRegex = /(?:\s*)(?:(?:\bprint\s*\(.*?\)\s*)|(?:\bfor.*?:\s*print.*?))/g;
-        const [isTyping, setIsTyping] = useState(false);
-        const sendMessage = async (rawMessage) => {
-            const message = stripHTMLTags(rawMessage);
-            const isPythonCode = message.match(pythonContentRegex) !== null;
-            const newMessage = {
-                message: message,
-                direction: 'outgoing',
-                sender: 'Admin',
-
-            };
-            const newMessages = [...messages, newMessage];
-            setMessages(newMessages);
-            setIsTyping(!message.includes('to: Admin'));
-            if (webSocket.current.readyState === WebSocket.OPEN) {
-                webSocket.current.send(JSON.stringify({message: newMessage.message}));
-                setMessage("");
-            }
-            setMessages((prevMessages) => [...prevMessages, message]);
-        };
-
-        function stripHTMLTags(text) {
-            const tempElement = document.createElement('div');
-            tempElement.innerHTML = text;
-            const plainText = tempElement.textContent || tempElement.innerText || '';
-            return plainText;
-        }
-
-        async function handleRun() {
-            try {
-                const code = getEditorValue(); // Assuming getEditorValue function gets the code from the editor
-
-                const inputData = {message: {code: code, input_values: null}}; // Prepare the request payload
-
-                const response = await fetch("http://localhost:8000/courses/api/code_execute/", { // replace with your API endpoint
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(inputData),
-                });
-
-                const result = await response.json(); // Parse the returned JSON
-                const { completion, image, message, output, prompt_line_n } = result;
-                // Here we log the result to the console
-                console.log("Execution result:", result);
-
-
-            } catch (error) {
-                // And in case an error happens in our async function, we also log this error
-                console.error("Error in handleImprove function: ", error.message);
-            }
     }
 
-        async function handleImprove() {
-            try {
-                const code = getEditorValue(); // Assuming getEditorValue function gets the code from the editor
+    function handleEditorDidMount(editor, monaco) {
+        console.log('Editor mounted');
+        editorRef.current = editor;
+        setIsEditorReady(true);
+        editor.setValue(editorContent);
+        setNewCode(editorContent);
+    }
 
-                const inputData = {message: {code: code, input_values: null}}; // Prepare the request payload
+    const debouncedHandleEditorChange = React.useCallback(
+        debounce((value) => {
+            console.log('Editor content changed:', value.slice(0, 50) + '...');
+            setEditorContent(value);
+            setNewCode(value);
 
-                const response = await fetch("http://localhost:8000/courses/api/code_execute/", { // replace with your API endpoint
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(inputData),
-                });
-
-                const result = await response.json(); // Parse the returned JSON
-                const { completion, image, message, output, prompt_line_n } = result;
-                // Here we log the result to the console
-                console.log("Execution result:", result);
-
-                // Then we also send a message to the WebSocket, including the returned result
-                webSocket.current.send(JSON.stringify({ message: `Check my code below:\n${code}\n\n***Execution Result***:\n${output}\nPlease suggest improvements to fix errors and improve program's functionality` }));
-
-            } catch (error) {
-                // And in case an error happens in our async function, we also log this error
-                console.error("Error in handleImprove function: ", error.message);
-            }
-
-        }
-
-        function ChatProvider({ children }) {
-
-
-            const functionValue = {
-                messages,  // messages state
-                sendMessage,  // sendMessage function
-                handleRun,  // handleRun function
-                handleImprove,  // handleImprove function
-            };
-            return <ChatContext.Provider value={functionValue}>{children}</ChatContext.Provider>;
-        }
-        useEffect(() => {
-            webSocket.current = new WebSocket("ws://localhost:8000/ws/livechat_autogen/");
-            webSocket.current.onopen = () => console.log("WebSocket open");
-
-            webSocket.current.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    const incomingMessage = data.message;
-                    const incomingMatches = Array.from(incomingMessage.matchAll(pythonContentRegex));
-                    const isPythonCode = incomingMatches.length > 0;
-                    setMessages(messages => [...messages,
-                        {message: isPythonCode ? incomingMatches.map(match => match[0]).join('\n') : incomingMessage, direction: 'incoming', sender: 'Server', isPythonCode: isPythonCode}
-                    ]);
-                    setIsTyping(!incomingMessage.includes('to: Admin'));
+            if (openedFile) {
+                console.log('Updating opened file:', openedFile.name);
+                if (fileSystemSocketRef.current && fileSystemSocketRef.current.readyState === WebSocket.OPEN) {
+                    const message = JSON.stringify({
+                        action: 'update_file_content',
+                        id: openedFile.id,
+                        content: value
+                    });
+                    console.log('Sending update message:', message.slice(0, 100) + '...');
+                    fileSystemSocketRef.current.send(message);
+                } else {
+                    console.log('WebSocket is not ready for sending');
                 }
-                catch (error) { console.error("Error parsing server response: ", error); }
-            };
+            } else {
+                console.log('No file is currently opened. Changes will be saved in local state.');
+            }
+        }, 1000),
+        [openedFile, setNewCode]
+    );
 
-            webSocket.current.onerror = (event) => console.error("WebSocket error observed:", event);
-            webSocket.current.onclose = (event) => console.log("WebSocket closed connection:", event);
 
-            return () => webSocket.current.close();
-        }, []);
+    function getEditorValue() {
+        return editorRef.current?.getValue();
+    }
 
-        const handleEditorChange = (newValue) => {
-            setNewCode(newValue);
-            setEditorContent(newValue);  // Update context with new content
-            console.log('updated code:', newValue);
+    const StyledTabs = styled((props) => (
+        <Tabs
+            {...props}
+            TabIndicatorProps={{children: <span className="MuiTabs-indicatorSpan"/>}}
+        />
+    ))({
+        '& .MuiTabs-indicator': {
+            display: 'flex',
+            justifyContent: 'center',
+            backgroundColor: 'transparent',
+        },
+        '& .MuiTabs-indicatorSpan': {
+            maxWidth: 100,
+            width: '100%',
+            backgroundColor: fontClr,
+        },
+    });
+
+    const StyledTab = styled((props) => (
+        <Tab
+            disableRipple
+            {...props}
+            label={
+                <Box p={0}>
+                    {props.label}
+                </Box>}
+        />
+    ))(({theme}) => ({
+        '&.Mui-selected': {
+            color: fontClr,
+        },
+        '&:not(:last-child)::after': {
+            content: '""',
+            display: 'block',
+            position: 'absolute',
+            height: '50%',
+            top: '25%',
+            right: 0,
+            borderRight: `1px solid ${fontClr}`,
+        }
+    }));
+
+    const [messages, setMessages] = useState([]);
+    const pythonContentRegex = /(?<=```python\n)[\s\S]+(?=\n```)/gm;
+    const pythonCodeRegex = /(?:\s*)(?:(?:\bprint\s*\(.*?\)\s*)|(?:\bfor.*?:\s*print.*?))/g;
+    const [isTyping, setIsTyping] = useState(false);
+
+    const sendMessage = async (rawMessage) => {
+        const message = stripHTMLTags(rawMessage);
+        const isPythonCode = message.match(pythonContentRegex) !== null;
+        const newMessage = {
+            message: message,
+            direction: 'outgoing',
+            sender: 'Admin',
         };
+        const newMessages = [...messages, newMessage];
+        setMessages(newMessages);
+        setIsTyping(!message.includes('to: Admin'));
+        if (webSocket.current.readyState === WebSocket.OPEN) {
+            webSocket.current.send(JSON.stringify({message: newMessage.message}));
+            setMessage("");
+        }
+        setMessages((prevMessages) => [...prevMessages, message]);
+    };
+
+    function stripHTMLTags(text) {
+        const tempElement = document.createElement('div');
+        tempElement.innerHTML = text;
+        const plainText = tempElement.textContent || tempElement.innerText || '';
+        return plainText;
+    }
+
+    const handleTabChange = (event, newValue) => {
+        actions.setEditorTab(newValue);
+    };
+
+    async function handleRun() {
+        try {
+            const code = getEditorValue();
+            const inputData = {message: {code: code, input_values: null}};
+            const response = await fetch("http://localhost:8000/courses/api/code_execute/", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(inputData),
+            });
+            const result = await response.json();
+            const { completion, image, message, output, prompt_line_n } = result;
+            console.log("Execution result:", result);
+        } catch (error) {
+            console.error("Error in handleRun function: ", error.message);
+        }
+    }
+
+    async function handleImprove() {
+        try {
+            const code = getEditorValue();
+            const inputData = {message: {code: code, input_values: null}};
+            const response = await fetch("http://localhost:8000/courses/api/code_execute/", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(inputData),
+            });
+            const result = await response.json();
+            const { completion, image, message, output, prompt_line_n } = result;
+            console.log("Execution result:", result);
+            webSocket.current.send(JSON.stringify({ message: `Check my code below:\n${code}\n\n***Execution Result***:\n${output}\nPlease suggest improvements to fix errors and improve program's functionality` }));
+        } catch (error) {
+            console.error("Error in handleImprove function: ", error.message);
+        }
+    }
+
+    function ChatProvider({ children }) {
+        const functionValue = {
+            messages,
+            sendMessage,
+            handleRun,
+            handleImprove,
+        };
+        return <ChatContext.Provider value={functionValue}>{children}</ChatContext.Provider>;
+    }
 
 
 
-
-        return (
-            <div className={classes.root} >
-
-                <div className={classes.terminal}
-
-                > {/* Added a wrapper with controlled width */}
-
-                <MyPaper className={classes.editor}
-                         sx={{
-                                 '& .Mui-paper': {
-
-                                     bgcolor: theme.palette.mode === theme.palette.background.paper,
-                                     color: fontClr,
-                                     border: "1px solid #464646",
-                                 }
-                             }}
-                >
-
+    return (
+        <div className={classes.root}>
+            <StateLogger />
+            <div className={classes.terminal}>
+                <MyPaper className={classes.editor} sx={{ bgcolor: themeBackground, color: fontColor }}>
                     <StyledTabs
-                        value={value}
-                        onChange={handleChange}
-                        aria-label="styled tabs example"
+                        value={editorTab}
+                        onChange={handleTabChange}
+                        aria-label="editor tabs"
                         className={classes.tabsStyled}
-                        style={{marginTop: "-20px", marginBottom: "15px", hight: "7.5px"}}
+                        style={{marginTop: "-20px", marginBottom: "10px", height: "7.5px"}}
                     >
                         <StyledTab className={classes.tab} label="Terminal" />
                         <StyledTab className={classes.tab} label="Interface" />
@@ -296,58 +367,56 @@
                         <StyledTab className={classes.tab} label="Smart Notes" />
                     </StyledTabs>
 
-                    {value === 0 && (
+                    {editorTab === 0 && (
+                        <div>
                             <MonacoEditor
+
                                 key="monaco_editor"
                                 theme={monacoTheme}
-                                height="70vh"
-                                width="75vh"
-                                path={language}
-                                defaultValue={editorContent}
-                                defaultLanguage={language}
+                                height="70.2vh"
+
+                                language={language}
+                                value={editorContent}
                                 options={options}
-                                beforeMount={handleEditorWillMount}
                                 onMount={handleEditorDidMount}
-
-                                onChange={handleEditorChange}
+                                onChange={debouncedHandleEditorChange}
                             />
+                            <div className={classes.buttonContainer}>
+                                <div className={classes.spacer}/>
+                                <Button className={classes.execute_button}
+                                        variant="contained"
+                                        disabled={!isEditorReady}
+                                        endIcon={<HandymanRoundedIcon/>}
+                                        onClick={handleImprove}
+                                >
+                                    FIX
+                                </Button>
+                                <div className={classes.spacer}/>
+                                <Button className={classes.execute_button}
+                                        variant="contained"
+                                        disabled={!isEditorReady}
+                                        endIcon={<PlayArrowIcon/>}
+                                        onClick={handleRun}
+                                >
+                                    Run
+                                </Button>
+                            </div>
+                        </div>
                     )}
-                    {value === 1 && (
-                        <Interface />
+
+                    <Interface
+                        ref={interfaceRef}
+                        code={editorContent}
+                        language={currentLanguage}
+                        fileName={openedFile?.name || 'rendered-test-component.js'}
+                        isVisible={editorTab === 1}
+                    />
+
+                    {editorTab === 2 && (
+                        state.user ? <FileSystem /> :
+                            <div style={{height: "76.5vh"}}>Please log in to access the file
+                                system.</div>
                     )}
-                    {value === 2 && (
-                        // Check if the user is logged in before rendering FileSystem
-                        !state.user ? (
-                            <div>Please log in to access the file system.</div>
-                        ) : (
-                            <FileSystem />
-                        )
-                    )}
-                    <div className={classes.buttonContainer}>
-
-                        <div className={classes.spacer}/>
-                        <Button className={classes.execute_button}
-                                variant="contained"
-                                disabled={!isEditorReady}
-                                endIcon={<HandymanRoundedIcon/>}
-                                onClick={handleImprove}
-
-                        >
-                            FIX
-                        </Button>
-                        <div className={classes.spacer}/>
-                        <Button className={classes.execute_button}
-                                variant="contained"
-                                disabled={!isEditorReady}
-                                endIcon={<PlayArrowIcon/>}
-                                onClick={handleRun}
-
-                        >
-                            Run
-                        </Button>
-
-                    </div>
-
 
                 </MyPaper>
                 </div>
