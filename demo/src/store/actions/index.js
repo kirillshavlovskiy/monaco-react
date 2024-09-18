@@ -90,6 +90,17 @@ const setOpenedFile = ({ state }, file) => {
   state.openedFile = file;
 };
 
+const setFilesInDirectory = (files) => ({
+  type: 'SET_FILES_IN_DIRECTORY',
+  payload: files
+});
+
+// This action might be useful if you want to update the content of a file in your state
+const updateFileContent = (fileId, content) => ({
+  type: 'UPDATE_FILE_CONTENT',
+  payload: { fileId, content }
+});
+
 const setNewCode = ({state}, code) => {
   state.newCode = code;
 };
@@ -103,20 +114,22 @@ const setUser = ({ state }, user) => {
 };
 
 export {
-  executeCode,
-  hideNotification,
-  setNewCode,
-  setUiContext,
-  setThemeMode,
-  setEditorMode,
-  setIsEditorReady,
-  showNotification,
-  setIsSettingsVisible,
-  setFontColor,
-  setThemeBackground,
-  editor,
-  diffEditor,
-  setUser,
-  setEditorTab,
-  setOpenedFile  // Add this new action to the exports
+    updateFileContent,
+    executeCode,
+    hideNotification,
+    setNewCode,
+    setUiContext,
+    setThemeMode,
+    setEditorMode,
+    setIsEditorReady,
+    showNotification,
+    setIsSettingsVisible,
+    setFontColor,
+    setThemeBackground,
+    editor,
+    diffEditor,
+    setUser,
+    setEditorTab,
+    setOpenedFile,  // Add this new action to the exports
+    setFilesInDirectory,
 };

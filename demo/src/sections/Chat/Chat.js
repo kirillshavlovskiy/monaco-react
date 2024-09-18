@@ -22,7 +22,7 @@ import { CircularProgress, Typography } from '@mui/material';
 import { FaCode } from 'react-icons/fa';
 import copyToClipboard from 'copy-to-clipboard';
 
-
+const HOST_URL = '13.60.82.196:8000'
 const DEFAULT_IMAGE_BASE64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==";
 
 
@@ -58,7 +58,7 @@ function Chat({ threadId }) {
             webSocket.current.close();
         }
 
-        webSocket.current = new WebSocket("ws://13.61.3.236:8000/ws/livechat_autogen/");
+        webSocket.current = new WebSocket(`ws://${HOST_URL}/ws/livechat_autogen/`);
 
         webSocket.current.onopen = () => {
             console.log("WebSocket open");

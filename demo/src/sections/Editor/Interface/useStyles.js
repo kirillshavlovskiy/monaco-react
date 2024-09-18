@@ -8,9 +8,8 @@ const useStyles = makeStyles((theme) => ({
         marginRight: 0,
     },
     execute_button: {
-        marginTop: 15,
-        marginLeft: 10,
-        marginBottom: 0,
+        marginLeft: '10px',
+        marginButtom: 0,
         backgroundColor: '#90CAF9',
         color: 'black', // Add this line
         '&:hover': {

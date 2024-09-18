@@ -45,9 +45,9 @@ const initialState = {
         enabled: true,
       },
       scrollbar: {
-        useShadows: true,
-        horizontalSliderSize: 1,
-        verticalSliderSize: 1,
+        useShadows: false,
+        horizontalSliderSize: 0,
+        verticalSliderSize: 0,
       },
       stickyScroll: { enabled: false },
       mouseWheelZoom: true,
@@ -87,7 +87,18 @@ const initialState = {
       wrappingIndent: 'none',
     },
   },
-
+  openedFile: {
+    name: 'test_component.js',
+    path: 'Root/test_component.js',
+  },
+  filesInDirectory: [
+    {
+      name: 'test_component.js',
+      path: 'Root/test_component.js',
+    }
+  ],
+  currentFilePath: 'Root/test_component.js',
+  currentFileName: 'test_component.js',
   editorMode: 'editor',
   editorTab: 0,
   themeBackground: '#1E1E1E',

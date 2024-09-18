@@ -16,5 +16,23 @@
         "S3AndCloudFront": {}
       }
     }
+  },
+  "prod": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-brainpowerai-prod-99210-authRole",
+      "UnauthRoleArn": "arn:aws:iam::891377302573:role/amplify-brainpowerai-prod-99210-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::891377302573:role/amplify-brainpowerai-prod-99210-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-brainpowerai-prod-99210-deployment",
+      "UnauthRoleName": "amplify-brainpowerai-prod-99210-unauthRole",
+      "StackName": "amplify-brainpowerai-prod-99210",
+      "StackId": "arn:aws:cloudformation:us-east-1:891377302573:stack/amplify-brainpowerai-prod-99210/2ce1ae30-71e2-11ef-94b1-126a7bd119a3",
+      "AmplifyAppId": "dhq1eab7946x5"
+    },
+    "categories": {
+      "hosting": {
+        "S3AndCloudFront": {}
+      }
+    }
   }
 }

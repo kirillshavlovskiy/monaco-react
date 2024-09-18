@@ -38,11 +38,8 @@ import { makeStyles } from '@material-ui/core/styles';
       },
     },
     editor: {
-      marginBottom: 12,
-      marginTop: 60,
       marginRight: 15,
       paddingTop: 0,
-
     },
     editorWrapper: {
       backgroundColor: '#1D1D1D',
@@ -61,8 +58,7 @@ import { makeStyles } from '@material-ui/core/styles';
       marginRight: 0,
     },
     execute_button: {
-      marginTop: 20,
-      marginLeft: 10,
+      marginLeft: '10px',
       marginButtom: 0,
       backgroundColor: '#90CAF9',
     },

@@ -15,6 +15,7 @@ import {MyPaper, CustomTextField} from 'theme';
 import {withStyles} from "@material-ui/core/styles";
 import ManageAccount from './ManageAccount';
 
+const HOST_URL = 'http://13.60.82.196:8000'
 
 // Custom styled ToggleButton
 const StyledToggleButton = styled(ToggleButton)(({ theme }) => ({
@@ -72,14 +73,14 @@ const AuthComponent = () => {
         try {
             let response;
             if (alignment === 'Login') {
-                response = await axios.post('http://localhost:8000/courses/login/', {
+                response = await axios.post(`${HOST_URL}/courses/login/`, {
                     username: formData.username,
                     password: formData.password,
                 });
                 setSuccess('Logged in successfully!');
                 actions.setUser(response.data.user);
             } else {
-                response = await axios.post('http://localhost:8000/courses/signup/', formData);
+                response = await axios.post(`${HOST_URL}/courses/signup/`, formData);
                 setSuccess('User created successfully! Please log in.');
                 setAlignment('Login');
             }

@@ -1,9 +1,8 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import Editor from '../Editor'; // Adjust the path as needed
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useStore } from 'store';
 import {
     List, ListItem, ListItemIcon, ListItemText, Collapse, IconButton, Menu, MenuItem, Typography,
-    Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box
+    Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box, CircularProgress
 } from '@mui/material';
 import FolderIcon from '@mui/icons-material/Folder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
@@ -23,6 +22,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 
 
+const HOST_URL = '13.60.82.196:8000'
 
 const FileSystemItem = ({ node, level = 0, onUpdate, onDelete, onAdd, onOpen, onRun }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -77,13 +77,16 @@ const FileSystemItem = ({ node, level = 0, onUpdate, onDelete, onAdd, onOpen, on
 
     const handleOpen = () => {
         if (node.type === 'file') {
-            onOpen(node.id, node.name, node.type);
+            onOpen(node);
         }
     };
 
-    const handleRun = () => {
-        onRun(node.id);
-        handleMenuClose();
+
+    const handleRun = (event) => {
+        event.stopPropagation();
+        if (node.type === 'file') {
+            onRun(node.id);
+        }
     };
 
     const isRoot = level === 0;
@@ -142,6 +145,11 @@ const FileSystemItem = ({ node, level = 0, onUpdate, onDelete, onAdd, onOpen, on
                 <IconButton size="small" onClick={handleMenuClick}>
                     <MoreVertIcon fontSize="small" />
                 </IconButton>
+                {node.type === 'file' && (
+                    <IconButton size="small" onClick={handleRun}>
+                        <PlayArrowIcon fontSize="small" />
+                    </IconButton>
+                )}
             </ListItem>
             <Menu
                 anchorEl={anchorEl}
@@ -206,60 +214,182 @@ const FileSystemItem = ({ node, level = 0, onUpdate, onDelete, onAdd, onOpen, on
 
 const FileSystemStructure = () => {
     const [fileSystem, setFileSystem] = useState(null);
-    const [openedFile, setOpenedFile] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [socket, setSocket] = useState(null);
     const { state, actions } = useStore();
+    const [reconnectAttempts, setReconnectAttempts] = useState(0);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [wsConnection, setWsConnection] = useState(null);
+    const wsRef = useRef(null);
 
-    const addNodeToState = useCallback((parentId, newNode) => {
-        console.log('Adding node to state:', parentId, newNode);
-        setFileSystem(prevState => {
-            const addNode = (node) => {
-                if (node.id === parentId) {
-                    return {
-                        ...node,
-                        children: [...(node.children || []), newNode]
-                    };
+    useEffect(() => {
+        if (!wsConnection && state.user && state.user.id) {
+            const ws = connectWebSocket();
+            setWsConnection(ws);
+
+            return () => {
+                if (ws) {
+                    ws.close();
                 }
-                if (node.children) {
-                    return { ...node, children: node.children.map(addNode) };
-                }
-                return node;
             };
-            return addNode(prevState);
-        });
-    }, []);
+        }
+    }, [state.user, wsConnection]);
+
 
 
     const connectWebSocket = useCallback(() => {
         const userId = state.user ? state.user.id : '';
-        const wsUrl = `ws://localhost:8000/ws/file_structure/?user_id=${userId}`;
-        console.log('Attempting to connect to WebSocket');
-        const ws = new WebSocket(wsUrl);
 
-        ws.onopen = () => {
-            console.log('WebSocket connected');
-            setSocket(ws);
-            ws.send(JSON.stringify({ action: 'get_structure' }));
+        const wsUrl = `ws://${HOST_URL}/ws/file_structure/?user_id=${userId}`;
+
+        console.log('Attempting to connect to WebSocket', wsUrl);
+        const ws = new WebSocket(wsUrl);
+        console.log('WebSocket object created:', ws);
+        const connectionTimeout = setTimeout(() => {
+            console.log('WebSocket connection attempt timed out');
+            if (ws.readyState !== WebSocket.OPEN) {
+                ws.close();
+            }
+        }, 10000); // 10 seconds timeout
+
+        ws.onopen = (event) => {
+            clearTimeout(connectionTimeout);
+            console.log('WebSocket connection opened:', event);
         };
 
         ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
-            setError('Failed to connect to file system. Please try again later.');
+            console.error('WebSocket error occurred:', error);
+            setError('Failed to connect to file system. Please check your internet connection and try again.');
             setLoading(false);
         };
 
         ws.onclose = (event) => {
-            console.log('WebSocket disconnected', event);
-            setError(`Connection to file system lost. Code: ${event.code}, Reason: ${event.reason || 'No reason provided'}`);
+            console.log('WebSocket connection closed:', event);
+            setError(`Connection to file system lost. ${event.reason || 'Please check your internet connection.'}`);
+            wsRef.current = null;
 
-            // Attempt to reconnect after 5 seconds
-            setTimeout(connectWebSocket, 5000);
+            const delay = Math.min(30000, 1000 * Math.pow(2, reconnectAttempts));
+            setTimeout(() => {
+                if (reconnectAttempts < 5) {
+                    setReconnectAttempts(prev => prev + 1);
+                    connectWebSocket();
+                } else {
+                    setError('Unable to reconnect. Please refresh the page or try again later.');
+                }
+            }, delay);
         };
 
-        return ws;
-    }, [state.user]);
+        ws.onmessage = handleWebSocketMessage;
+
+        wsRef.current = ws;
+    }, [state.user, reconnectAttempts]);
+
+    useEffect(() => {
+        if (state.user && state.user.id && !wsRef.current) {
+            connectWebSocket();
+        }
+
+        return () => {
+            if (wsRef.current) {
+                wsRef.current.close();
+            }
+        };
+    }, [state.user, connectWebSocket]);
+
+    const handleWebSocketMessage = useCallback((event) => {
+        console.log('Received message:', event.data);
+        try {
+            const data = JSON.parse(event.data);
+            console.log('Parsed data:', data);
+
+            switch(data.type) {
+                case 'file_structure':
+                    console.log('Received file structure:', data.structure);
+                    setFileSystem(data.structure);
+                    setLoading(false);
+                    setError(null);
+                    break;
+                case 'file_path':
+                    console.log('Received file path:', data.path);
+                    actions.setOpenedFile({
+                        ...state.openedFile,
+                        path: data.path
+                    });
+                    break;
+                case 'file_content':
+                    console.log('Received file content:', data.content ? 'Content received' : 'No content');
+                    if (data.content !== null && data.content !== undefined) {
+                        actions.setOpenedFile({
+                            ...state.openedFile,
+                            content: data.content
+                        });
+                        actions.setNewCode(data.content);
+                        actions.setEditorTab(0); // Switch to editor tab
+                    } else {
+                        console.error('Received null or undefined file content');
+                        setError('File content is empty or undefined');
+                    }
+                    break;
+                default:
+                    console.log('Unhandled message type:', data.type);
+            }
+        } catch (error) {
+            console.error('Error processing message:', error);
+            setError('Error processing server response');
+        }
+    }, [actions, state.openedFile, setError, setFileSystem, setLoading]);
+
+    const handleFileSelect = useCallback((file) => {
+        console.log('File selected:', file);
+
+        // Set initial state for the opened file
+        const initialFileState = {
+            id: file.id,
+            name: file.name,
+            type: file.type,
+            path: `Root/${file.name}`,
+            content: null
+        };
+        console.log('Setting initial file state:', initialFileState);
+        actions.setOpenedFile(initialFileState);
+
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            console.log('Sending file path request for file:', file.id);
+            wsRef.current.send(JSON.stringify({
+                action: 'get_file_path',
+                id: file.id
+            }));
+
+            if (file.type === 'file') {
+                console.log('Sending file content request for file:', file.id);
+                wsRef.current.send(JSON.stringify({
+                    action: 'get_file_content',
+                    id: file.id
+                }));
+            }
+        } else {
+            console.error('WebSocket is not connected');
+            setError('Cannot fetch file information: WebSocket is not connected. Please try again.');
+        }
+    }, [actions, setError]);
+
+    useEffect(() => {
+        console.log("state openedFile path: ", state.openedFile.path)
+    }, [state.openedFile]);
+
+    const handleRunFile = useCallback((fileId) => {
+        console.log(`Attempting to run file with ID: ${fileId}`);
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify({
+                action: 'run_file',
+                id: fileId
+            }));
+        } else {
+            console.error('Cannot run file: WebSocket is not connected');
+            setError('Cannot run file: WebSocket is not connected. Please try again.');
+        }
+    }, []);
 
     const updateNode = useCallback((id, newNode) => {
         if (socket && socket.readyState === WebSocket.OPEN) {
@@ -267,14 +397,17 @@ const FileSystemStructure = () => {
                 action: 'update_node',
                 id: id,
                 newName: newNode.name
-
             }));
+            // Update global state
+            actions.setFilesInDirectory(prevFiles =>
+                prevFiles.map(file => file.id === id ? {...file, name: newNode.name} : file)
+            );
         } else {
-            setError('Cannot update node: WebSocket is not connected');
+            setError('Cannot update node: WebSocket is not connected. Please try again.');
         }
-    }, [socket]);
+    }, [socket, actions]);
 
-
+// Similar updates for addNode and deleteNode functions
 
     const addNode = useCallback((parentId, newNode) => {
         if (socket && socket.readyState === WebSocket.OPEN) {
@@ -284,17 +417,22 @@ const FileSystemStructure = () => {
                 node: newNode
             }));
         } else {
-            setError('Cannot add node: WebSocket is not connected');
+            setError('Cannot add node: WebSocket is not connected. Please try again.');
         }
     }, [socket]);
 
-    const handleRunFile = (fileId) => {
-        // Implement logic to run the file
-        console.log(`Running file with id: ${fileId}`);
-    };
+    const deleteNode = useCallback((id) => {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                action: 'delete_node',
+                id: id
+            }));
+        } else {
+            setError('Cannot delete node: WebSocket is not connected. Please try again.');
+        }
+    }, [socket]);
 
     const renameNode = useCallback((id, newName) => {
-        console.log('Renaming node:', id, newName);
         if (socket && socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({
                 action: 'rename_node',
@@ -302,162 +440,87 @@ const FileSystemStructure = () => {
                 newName: newName
             }));
         } else {
-            setError('Cannot rename node: WebSocket is not connected');
+            setError('Cannot rename node: WebSocket is not connected. Please try again.');
         }
     }, [socket]);
 
-    const deleteNode = useCallback((id) => {
-        console.log('Deleting node:', id);
-        if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({
-                action: 'delete_node',
-                id: id
-            }));
-        } else {
-            setError('Cannot delete node: WebSocket is not connected');
+    const getFullPath = useCallback((file) => {
+        console.log('Getting full path for file:', file);
+        let path = file.name;
+        let current = file;
+        console.log('Initial path:', path);
+        while (current.parent) {
+            console.log('Current parent:', current.parent);
+            current = current.parent;
+            path = `${current.name}/${path}`;
+            console.log('Updated path:', path);
         }
-    }, [socket]);
-
-    const updateFileSystemState = useCallback((updatedNode) => {
-        setFileSystem(prevState => {
-            const updateNode = (node) => {
-                if (node.id === updatedNode.id) {
-                    return { ...node, ...updatedNode };
-                }
-                if (node.children) {
-                    return { ...node, children: node.children.map(updateNode) };
-                }
-                return node;
-            };
-            return updateNode(prevState);
-        });
+        console.log('Final full path calculated:', path);
+        return path;
     }, []);
 
-    const removeNodeFromState = useCallback((nodeId) => {
-        setFileSystem(prevState => {
-            const removeNode = (node) => {
-                if (node.id === nodeId) {
-                    return null;
-                }
-                if (node.children) {
-                    return {
-                        ...node,
-                        children: node.children.filter(child => child.id !== nodeId).map(removeNode)
-                    };
-                }
-                return node;
-            };
-            return removeNode(prevState);
-        });
-    }, []);
-
-
-    const handleOpenFile = useCallback((fileId, fileName, fileType) => {
-        console.log(`Attempting to open file: ${fileName} (ID: ${fileId})`);
-        if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({
-                action: 'get_file_content',
-                id: fileId
-            }));
-        } else {
-            console.error('Cannot fetch file content: WebSocket is not connected');
-            setError('Cannot fetch file content: WebSocket is not connected');
-        }
-    }, [socket, setError]);
-
-    const handleFileSelect = useCallback((file) => {
-        console.log('File selected:', file);  // Log the file parameter, not openedFile state
-        actions.setOpenedFile(file);
-        actions.setNewCode(file.content || '');
-        actions.setEditorTab(0); // Switch to editor tab
-        // Any other necessary state updates
-    }, [actions]);
 
     useEffect(() => {
-        const ws = connectWebSocket();
+        if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+            wsConnection.send(JSON.stringify({ action: 'get_structure' }));
+        }
+    }, [wsConnection]);
 
-        ws.onmessage = (event) => {
-            console.log('Received message:', event.data);
-            const data = JSON.parse(event.data);
-            switch(data.type) {
-                case 'file_structure':
-                    console.log('Received file structure:', data.structure);
-                    setFileSystem(data.structure);
-                    setLoading(false);
-                    break;
-                case 'node_added':
-                    console.log('Node added:', data.node);
-                    addNodeToState(data.node.parent, data.node);
-                    break;
-                case 'node_renamed':
-                    console.log('Node renamed:', data.node);
-                    updateFileSystemState(data.node);
-                    break;
-                case 'node_deleted':
-                    console.log('Node deleted:', data.id);
-                    removeNodeFromState(data.id);
-                    break;
-                case 'file_content':
-                    console.log('Received file content:', data);
-                    if (data.content !== null && data.content !== undefined) {
-                        const updatedFile = {
-                            id: data.id,
-                            name: data.name,
-                            content: data.content,
-                            type: 'file'
-                        };
-                        handleFileSelect(updatedFile);
-                    } else {
-                        console.error('Received null or undefined file content');
-                        setError('File content is empty or undefined');
-                    }
-                    break;
-                case 'error':
-                    console.error('Received error:', data.message);
-                    setError(data.message);
-                    break;
-                default:
-                    console.log('Received unknown message type:', data.type);
-            }
-        };
 
-        return () => {
-            if (ws) {
-                console.log('Closing WebSocket connection');
-                ws.close();
-            }
-        };
-    }, [connectWebSocket, actions, handleFileSelect, openedFile]);
-
+    useEffect(() => {
+        if (wsConnection) {
+            wsConnection.onmessage = handleWebSocketMessage;
+        }
+    }, [wsConnection, handleWebSocketMessage]);
 
     if (loading) {
-        return <Typography>Loading file system...</Typography>;
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+                <CircularProgress />
+                <Typography variant="body1" style={{ marginLeft: '10px' }}>
+                    Loading file system...
+                </Typography>
+            </Box>
+        );
     }
 
     if (error) {
-        return <Typography color="error">{error}</Typography>;
+        return (
+            <Box display="flex" flexDirection="column" alignItems="center" height="100%">
+                <Typography color="error" gutterBottom>{error}</Typography>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => {
+                        setLoading(true);
+                        setError(null);
+                        setReconnectAttempts(0);
+                        connectWebSocket();
+                    }}
+                    style={{ marginTop: '10px' }}
+                >
+                    Reconnect
+                </Button>
+            </Box>
+        );
     }
 
     if (!fileSystem) {
-        return <Typography>No file system found.</Typography>;
+        return <Typography>Please refresh the page or try to log in.</Typography>;
     }
 
     return (
-        <>
-        <Box style={{height: "76.5vh"}}>
-            {error && <div style={{color: 'red', height: "76.5vh"}}>{error}</div>}
+        <Box style={{height: "76.5vh", overflow: 'auto'}}>
             <FileSystemItem
                 node={fileSystem}
                 onUpdate={updateNode}
                 onDelete={deleteNode}
                 onAdd={addNode}
                 onRename={renameNode}
-                onOpen={handleOpenFile}
+                onOpen={handleFileSelect}
                 onRun={handleRunFile}
             />
-
         </Box>
-        </>
     );
 };
 
