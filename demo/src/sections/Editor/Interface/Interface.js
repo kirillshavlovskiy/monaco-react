@@ -9,7 +9,7 @@ import useStyles from "../useStyles";
 import { useStore } from "../../../store";
 import html2canvas from 'html2canvas';
 
-const HOST_URL = 'http://13.60.82.196:8000'
+const HOST_URL = 'https://brainpower-ai.net'
 const DEFAULT_FILE_NAME = 'test-component.js';
 const DEFAULT_LANGUAGE = 'react';
 const DEFAULT_IMAGE_BASE64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg=="

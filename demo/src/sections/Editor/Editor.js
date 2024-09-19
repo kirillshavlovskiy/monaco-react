@@ -27,8 +27,6 @@ import {
 
 
 
-const HOST_URL = '13.60.82.196:8000'
-
 
 const StateLogger = () => {
     const { newCode, editorTab, openedFile } = useStore(state => ({
@@ -54,6 +52,7 @@ const Editor = () => {
         state: {
             editor: {selectedLanguageId, options},
             monacoTheme,
+            user,
             themeBackground,
             fontColor,
             newCode,
@@ -199,43 +198,7 @@ const Editor = () => {
     }, [editorTab]);
 
 
-    const connectFileSystemWebSocket = () => {
-        const ws = new WebSocket(`ws://${HOST_URL}/ws/file_structure/`);
 
-        ws.onopen = () => {
-            console.log('File System WebSocket connected');
-        };
-
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.type === 'file_content' && data.id === openedFile?.id) {
-                setEditorContent(data.content);
-                setNewCode(data.content);
-            }
-            // Handle other message types...
-        };
-
-        ws.onerror = (error) => {
-            console.error('File System WebSocket error:', error);
-        };
-
-        ws.onclose = () => {
-            console.log('File System WebSocket disconnected');
-            // Attempt to reconnect after a delay
-            setTimeout(connectFileSystemWebSocket, 3000);
-        };
-
-        fileSystemSocketRef.current = ws;
-    };
-
-    useEffect(() => {
-        connectFileSystemWebSocket();
-        return () => {
-            if (fileSystemSocketRef.current) {
-                fileSystemSocketRef.current.close();
-            }
-        };
-    }, []);
 
     useEffect(() => {
         console.log('newCode changed:', newCode);
@@ -726,7 +689,7 @@ return (
                                 alignItems: 'center',
                                 justifyContent: 'flex-end',
                                 padding: '8px',
-                                borderTop: '1px solid rgba(255, 255, 255, 0.12)',
+                                borderTop: '0.5px solid rgba(255, 255, 255, 0.12)',
                                 minHeight: '38px',
                                 flexShrink: 0
                             }}>
@@ -809,7 +772,7 @@ return (
 
                     <Box sx={{
                         padding: '8px',
-                        borderTop: '1px solid rgba(255, 255, 255, 0.12)',
+                        borderTop: '0.5px solid rgba(255, 255, 255, 0.1)',
                         height: '38px',
                         display: 'flex',
                         alignItems: 'center',

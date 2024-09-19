@@ -22,7 +22,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 
 
-const HOST_URL = '13.60.82.196:8000'
+const HOST_URL = 'brainpower-ai.net'
 
 const FileSystemItem = ({ node, level = 0, onUpdate, onDelete, onAdd, onOpen, onRun }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -241,7 +241,7 @@ const FileSystemStructure = () => {
     const connectWebSocket = useCallback(() => {
         const userId = state.user ? state.user.id : '';
 
-        const wsUrl = `ws://${HOST_URL}/ws/file_structure/?user_id=${userId}`;
+        const wsUrl = `wss://${HOST_URL}/ws/file_structure/?user_id=${userId}`;
 
         console.log('Attempting to connect to WebSocket', wsUrl);
         const ws = new WebSocket(wsUrl);

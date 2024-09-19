@@ -15,7 +15,7 @@ import {MyPaper, CustomTextField} from 'theme';
 import {withStyles} from "@material-ui/core/styles";
 import ManageAccount from './ManageAccount';
 
-const HOST_URL = 'http://13.60.82.196:8000'
+const HOST_URL = 'https://brainpower-ai.net'
 
 // Custom styled ToggleButton
 const StyledToggleButton = styled(ToggleButton)(({ theme }) => ({
